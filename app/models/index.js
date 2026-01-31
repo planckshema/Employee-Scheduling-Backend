@@ -6,8 +6,7 @@ import sequelize from "../config/sequelizeInstance.js";
 
 import User from "./user.model.js";
 import Session from "./session.model.js";
-import Tutorial from "./tutorial.model.js";
-import Lesson from "./lesson.model.js"; 
+import Employer from "./employer.model.js";
 
 
 const db = {};
@@ -18,6 +17,7 @@ db.user = User;
 db.session = Session;
 db.tutorial = Tutorial;
 db.lesson = Lesson;
+db.employer = Employer;
 
 // foreign key for session
 db.user.hasMany(
