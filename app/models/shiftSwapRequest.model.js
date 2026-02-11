@@ -19,5 +19,5 @@ const ShiftSwapRequest = SequelizeInstance.define("shiftSwapRequest", {
   // },
 });
 
-export default User;
+export default ShiftSwapRequest;
 
