@@ -3,6 +3,7 @@ import { Sequelize } from "sequelize";
 import sequelize from "../config/sequelizeInstance.js";
 
 // Models
+import EmployeeAvailability from "./employeeAvailability.js";
 import TaskListItem from "./taskListItem.model.js";
 import TaskStatus from "./taskStatus.model.js";
 import ShiftSwapRequest from "./shiftSwapRequest.model.js";
@@ -13,6 +14,8 @@ const db = {};
 db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 
+db.user = User;
+db.employeeAvailability = EmployeeAvailability;
 db.taskListItem = TaskListItem;
 db.taskStatus = TaskStatus;
 db.shiftSwapRequest = ShiftSwapRequest;
