@@ -1,11 +1,10 @@
-name: AWS DEPLOY TO STAGING
-# turn off deploy to AWS
+name: AWS DEPLOY TO PRODUCTION
+# Deploy on push to main branch
 
 on:
-  pull_request:
-    types: [closed]
+  push:
     branches:
-      - dev
+      - main
 
 jobs:
   aws-deploy:
@@ -21,7 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: dev
+          ref: main
       - uses: actions/setup-node@v5
         with:
           node-version: 24
@@ -45,21 +44,19 @@ jobs:
           SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH_KEY }}
           ARGS: "-rltgoDzvO --delete"
           SOURCE: "deploy/"
-          REMOTE_HOST: "tutorial.eaglesoftwareteam.com"
+          REMOTE_HOST: "project3.eaglesoftwareteam.com"
           REMOTE_USER: ubuntu
-          TARGET: "nodeapps/tutorial-backend"
+          TARGET: "nodeapps/sev2026/t8"
       - name: Execute SSH commmands on remote server
         uses: JimCronqvist/action-ssh@master
-        env:
-          NAME: "Root"
         with:
-          hosts: "ubuntu@tutorial.eaglesoftwareteam.com"
+          hosts: "ubuntu@project3.eaglesoftwareteam.com"
           privateKey: ${{ secrets.SERVER_SSH_KEY }}
           debug: false
           command: |
-            cd nodeapps/tutorial-backend
+            cd nodeapps/sev2026/t8
             npm install
-            sudo systemctl stop tutorial-backend
-            sudo cp tutorial-backend.service /lib/systemd/system/tutorial-backend.service
+            sudo systemctl stop sev2026-backend || true
+            sudo cp tutorial-backend.service /lib/systemd/system/sev2026-backend.service || true
             sudo systemctl daemon-reload
-            sudo systemctl start tutorial-backend
+            sudo systemctl start sev2026-backend || true

@@ -4,6 +4,9 @@ import sequelize from "../config/sequelizeInstance.js";
 
 // Models
 import TaskListItem from "./taskListItem.model.js";
+import TaskStatus from "./taskStatus.model.js";
+import ShiftSwapRequest from "./shiftSwapRequest.model.js";
+import Shift from "./shift.model.js";
 
 
 const db = {};
@@ -11,6 +14,8 @@ db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 
 db.taskListItem = TaskListItem;
-
+db.taskStatus = TaskStatus;
+db.shiftSwapRequest = ShiftSwapRequest;
+db.shift = Shift;
 
 export default db;
