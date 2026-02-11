@@ -1,6 +1,7 @@
 import { Router } from "express";
 
 import AuthRoutes from "./auth.routes.js";
+import TaskLists from "./taskList.routes.js";
 import UserRoutes from "./user.routes.js";
 import EmployeeRoutes from "./employee.routes.js";
 import EmployeeAvailabilityRoutes from "./employeeAvailability.routes.js";
@@ -13,6 +14,7 @@ import ShiftRoutes from "./shift.routes.js";
 const router = Router();
 
 router.use("/", AuthRoutes);
+router.use("/taskLists", TaskLists);
 router.use("/users", UserRoutes);
 router.use("/employee", EmployeeRoutesRoutes);
 router.use("/employeeAvailabilities", EmployeeAvailabilityRoutes);
