@@ -3,12 +3,12 @@ import { Sequelize } from "sequelize";
 import sequelize from "../config/sequelizeInstance.js";
 
 // Models
-
-import User from "./user.model.js";
-import Session from "./session.model.js";
-import Tutorial from "./tutorial.model.js";
-import Lesson from "./lesson.model.js"; 
 import Employee from "./employee.model.js";
+import EmployeeAvailability from "./employeeAvailability.model.js";
+import TaskListItem from "./taskListItem.model.js";
+import TaskStatus from "./taskStatus.model.js";
+import ShiftSwapRequest from "./shiftSwapRequest.model.js";
+import Shift from "./shift.model.js";
 
 
 const db = {};
@@ -16,57 +16,11 @@ db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 
 db.user = User;
-db.session = Session;
-db.tutorial = Tutorial;
-db.lesson = Lesson;
 db.employee = Employee;
-
-// foreign key for session
-db.user.hasMany(
-  db.session,
-  { as: "session" },
-  { foreignKey: { allowNull: false }, onDelete: "CASCADE" }
-);
-db.session.belongsTo(
-  db.user,
-  { as: "user" },
-  { foreignKey: { allowNull: false }, onDelete: "CASCADE" }
-);
-
-// foreign key for Employees
-db.employee.hasMany(
-  db.user,
-  { as: "user" },
-  { foreignKey: { allowNull: false }, onDelete: "CASCADE" }
-);
-db.user.belongsTo(
-  db.employee,
-  { as: "employee" },
-  { foreignKey: { allowNull: false }, onDelete: "CASCADE" }
-);
-
-// foreign key for tutorials
-db.user.hasMany(
-  db.tutorial,
-  { as: "tutorial" },
-  { foreignKey: { allowNull: false }, onDelete: "CASCADE" }
-);
-db.tutorial.belongsTo(
-  db.user,
-  { as: "user" },
-  { foreignKey: { allowNull: false }, onDelete: "CASCADE" }
-);
-
-// foreign key for lessons
-db.tutorial.hasMany(
-  db.lesson,
-  { as: "lesson" },
-  { foreignKey: { allowNull: false }, onDelete: "CASCADE" }
-);
-db.lesson.belongsTo(
-  db.tutorial,
-  { as: "tutorial" },
-  { foreignKey: { allowNull: false }, onDelete: "CASCADE" }
-);
+db.employeeAvailability = EmployeeAvailability;
+db.taskListItem = TaskListItem;
+db.taskStatus = TaskStatus;
+db.shiftSwapRequest = ShiftSwapRequest;
+db.shift = Shift;
 
 export default db;
