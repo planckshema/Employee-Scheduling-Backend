@@ -1,4 +1,4 @@
-  import tutorials from "../controllers/shift.controller.js";
+  import shifts from "../controllers/shift.controller.js";
   import authenticate from "../authorization/authorization.js";
   import { Router } from "express";
   var router = Router()

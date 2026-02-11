@@ -43,3 +43,5 @@ exports.create = (req, res) => {
       });
     });
 };
+
+export default exports;
