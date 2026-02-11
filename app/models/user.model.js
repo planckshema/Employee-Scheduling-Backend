@@ -8,15 +8,19 @@ const User = SequelizeInstance.define("user", {
     autoIncrement: true,
     primaryKey: true,
   },
-  fName: {
+  firstName: {
     type: Sequelize.STRING,
     allowNull: false,
   },
-  lName: {
+  lastName: {
     type: Sequelize.STRING,
     allowNull: false,
   },
   email: {
+    type: Sequelize.STRING,
+    allowNull: false,
+  },
+  phoneNumber:{
     type: Sequelize.STRING,
     allowNull: false,
   },
