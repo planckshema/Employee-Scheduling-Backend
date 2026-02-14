@@ -3,7 +3,7 @@ import { Sequelize } from "sequelize";
 import sequelize from "../config/sequelizeInstance.js";
 
 // Models
-
+import Position from "./position.models.js";
 import Schedule from "./schedule.modle.js";
 import ClockInTime from "./clockInTime.model.js";
 import ClockOutTime from "./clockOutTime.model.js";
@@ -23,6 +23,7 @@ const db = {};
 db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 
+db.position = Position;
 db.schedule = Schedule;
 db.clockInTime = ClockInTime;
 db.clockOutTime = ClockOutTime;
