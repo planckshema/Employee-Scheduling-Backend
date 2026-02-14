@@ -1,6 +1,8 @@
 import { Router } from "express";
 
 import AuthRoutes from "./auth.routes.js";
+import ClockInRoutes from "./clockInTime.routes.js";
+import ClockOutRoutes from "./clockOutTime.routes.js";
 import TaskLists from "./taskList.routes.js";
 import UserRoutes from "./user.routes.js";
 import EmployerRoutes from "./employer.routes.js";
@@ -15,6 +17,8 @@ import ShiftRoutes from "./shift.routes.js";
 const router = Router();
 
 router.use("/", AuthRoutes);
+router.use("/clockInTimes", ClockInRoutes);
+router.use("/clockOutTimes", ClockOutRoutes);
 router.use("/taskLists", TaskLists);
 router.use("/users", UserRoutes);
 router.use("/employers", EmployerRoutes);
