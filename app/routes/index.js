@@ -2,6 +2,7 @@ import { Router } from "express";
 
 import AuthRoutes from "./auth.routes.js";
 import BusinessArea from "./businessArea.routes.js";
+import EmployeePosition from "./employeePosition.routes.js";
 import PositionRoutes from "./position.routes.js";
 import ScheduleRoutes from "./schedule.routes.js";
 import ClockInRoutes from "./clockInTime.routes.js";
@@ -21,6 +22,7 @@ const router = Router();
 
 router.use("/", AuthRoutes);
 router.use("/businessArea", BusinessArea);
+router.use("/employeePositions", EmployeePosition);
 router.use("/positions", Positions);
 router.use("/schedules", ScheduleRoutes);
 router.use("/clockInTimes", ClockInRoutes);

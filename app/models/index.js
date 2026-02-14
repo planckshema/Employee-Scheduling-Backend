@@ -5,6 +5,7 @@ import sequelize from "../config/sequelizeInstance.js";
 // Models
 
 import BusinessArea from "./businessArea.model.js";
+import EmployeePosition from "./employeePosition.model.js";
 import Position from "./position.models.js";
 import Schedule from "./schedule.modle.js";
 import ClockInTime from "./clockInTime.model.js";
@@ -26,6 +27,7 @@ db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 
 db.businessArea = BusinessArea;
+db.employeePosition = EmployeePosition;
 db.position = Position;
 db.schedule = Schedule;
 db.clockInTime = ClockInTime;
