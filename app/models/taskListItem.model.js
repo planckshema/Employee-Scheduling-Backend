@@ -22,5 +22,5 @@ const TaskListItem = SequelizeInstance.define("taskListItem", {
   // },
 });
 
-export default User;
+export default TaskListItem;
 
