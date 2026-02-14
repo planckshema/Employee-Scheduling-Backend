@@ -21,5 +21,5 @@ const Schedule = SequelizeInstance.define("schedule", {
   },
 });
 
-export default User;
+export default Schedule;
 

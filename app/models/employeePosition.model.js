@@ -22,5 +22,5 @@ const EmployeePosition = SequelizeInstance.define("employeePosition", {
   // },
 });
 
-export default User;
+export default EmployeePosition;
 

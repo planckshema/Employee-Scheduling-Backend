@@ -33,4 +33,4 @@ const Employer = SequelizeInstance.define("employer", {
      },
 });
 
-export default employer;
+export default Employer;
