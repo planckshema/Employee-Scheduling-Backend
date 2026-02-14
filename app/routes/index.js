@@ -1,6 +1,7 @@
 import { Router } from "express";
 
 import AuthRoutes from "./auth.routes.js";
+import NotificationRoutes from "./notification.routes.js";
 import BusinessArea from "./businessArea.routes.js";
 import EmployeePosition from "./employeePosition.routes.js";
 import PositionRoutes from "./position.routes.js";
@@ -21,6 +22,7 @@ import ShiftRoutes from "./shift.routes.js";
 const router = Router();
 
 router.use("/", AuthRoutes);
+router.use("notifications", NotificationRoutes);
 router.use("/businessArea", BusinessArea);
 router.use("/employeePositions", EmployeePosition);
 router.use("/positions", Positions);
@@ -36,5 +38,6 @@ router.use("/taskListItems", TaskListItemRoutes);
 router.use("/taskStatus", TaskStatus);
 router.use("/shiftSwapRequests", ShiftSwapRequestRoutes);
 router.use("/shifts", ShiftRoutes);
+
 
 export default router;

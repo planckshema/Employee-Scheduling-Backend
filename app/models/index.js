@@ -3,7 +3,7 @@ import { Sequelize } from "sequelize";
 import sequelize from "../config/sequelizeInstance.js";
 
 // Models
-
+import Notification from "./notification.model.js";
 import BusinessArea from "./businessArea.model.js";
 import EmployeePosition from "./employeePosition.model.js";
 import Position from "./position.models.js";
@@ -26,6 +26,7 @@ const db = {};
 db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 
+db.notification = Notification;
 db.businessArea = BusinessArea;
 db.employeePosition = EmployeePosition;
 db.position = Position;
