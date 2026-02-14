@@ -1,6 +1,7 @@
 import { Router } from "express";
 
 import AuthRoutes from "./auth.routes.js";
+import TimeOffRoutes from "./timeOff.routes.js";
 import NotificationRoutes from "./notification.routes.js";
 import BusinessArea from "./businessArea.routes.js";
 import EmployeePosition from "./employeePosition.routes.js";
@@ -22,6 +23,7 @@ import ShiftRoutes from "./shift.routes.js";
 const router = Router();
 
 router.use("/", AuthRoutes);
+router.use("/timeOff", TimeoffRoutes);
 router.use("notifications", NotificationRoutes);
 router.use("/businessArea", BusinessArea);
 router.use("/employeePositions", EmployeePosition);
