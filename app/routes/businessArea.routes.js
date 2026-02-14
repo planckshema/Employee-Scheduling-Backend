@@ -1,0 +1,11 @@
+  import businessAreas from "../controllers/businessArea.controller.js";
+  import  authenticate from "../authorization/authorization.js";
+  import { Router } from "express";
+  var router = Router()
+
+
+  // Create a new User
+  router.post("/", [authenticate], businessAreas.create);
+
+  export default router;
+
