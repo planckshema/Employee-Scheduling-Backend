@@ -19,6 +19,10 @@ const Session = SequelizeInstance.define("sessions", {
       type: Sequelize.DATE,
       allowNull: false,
     },
-  });
+   }, 
+  {
+    timestamps: false,
+  }
+);
 
 export default Session;

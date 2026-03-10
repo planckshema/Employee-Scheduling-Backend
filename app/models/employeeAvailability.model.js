@@ -6,6 +6,10 @@ const EmployeeAvailability = sequelize.define("employeeAvailability", {
     type: DataTypes.TEXT,
     allowNull: false
   }
-});
+ }, 
+  {
+    timestamps: false,
+  }
+);
 
 export default EmployeeAvailability;

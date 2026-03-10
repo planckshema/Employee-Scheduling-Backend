@@ -20,7 +20,11 @@ const EmployeePosition = SequelizeInstance.define("employeePosition", {
   //   type: Sequelize.DATE,
   //   allowNull: true
   // },
-});
+ }, 
+  {
+    timestamps: false,
+  }
+);
 
 export default EmployeePosition;
 

@@ -24,7 +24,11 @@ const Notifications = SequelizeInstance.define("notifications", {
   //   type: Sequelize.DATE,
   //   allowNull: true
   // },
-});
+ }, 
+  {
+    timestamps: false,
+  }
+);
 
 export default Notifications;
 
