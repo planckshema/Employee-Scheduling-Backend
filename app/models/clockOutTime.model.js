@@ -28,7 +28,11 @@ const ClockOutTime = SequelizeInstance.define("clockOutTime", {
   //   type: Sequelize.DATE,
   //   allowNull: true
   // },
-});
+ }, 
+  {
+    timestamps: false,
+  }
+);
 
 export default ClockOutTime;
 

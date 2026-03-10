@@ -25,7 +25,11 @@ const Employee = SequelizeInstance.define("employee", {
     allowNull: false,
   },
 
-});
+ }, 
+  {
+    timestamps: false,
+  }
+);
 
 export default Employee;
 

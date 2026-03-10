@@ -22,6 +22,10 @@ const Shift = SequelizeInstance.define("shift", {
         type: Sequelize.DATE,
         allownull: false,
     },
-});
+ }, 
+  {
+    timestamps: false,
+  }
+);
 
 export default Shift;

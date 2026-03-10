@@ -17,7 +17,11 @@ const ShiftSwapRequest = SequelizeInstance.define("shiftSwapRequest", {
   //   type: Sequelize.DATE,
   //   allowNull: true
   // },
-});
+ }, 
+  {
+    timestamps: false,
+  }
+);
 
 export default ShiftSwapRequest;
 

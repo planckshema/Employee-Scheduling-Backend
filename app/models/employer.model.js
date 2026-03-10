@@ -31,6 +31,10 @@ const Employer = SequelizeInstance.define("employer", {
         type: Sequelize.STRING,
         allowNull: false,
      },
-});
+ }, 
+  {
+    timestamps: false,
+  }
+);
 
 export default Employer;
