@@ -24,7 +24,7 @@ const router = Router();
 
 router.use("/", AuthRoutes);
 router.use("/timeOff", TimeOffRoutes);
-router.use("notifications", NotificationRoutes);
+router.use("/notifications", NotificationRoutes);
 router.use("/businessArea", BusinessArea);
 router.use("/employeePositions", EmployeePosition);
 router.use("/positions", PositionRoutes);
