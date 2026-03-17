@@ -1,11 +1,14 @@
-  import shifts from "../controllers/shift.controller.js";
-  import authenticate from "../authorization/authorization.js";
-  import { Router } from "express";
-  var router = Router()
+import shifts from "../controllers/shift.controller.js";
+import authenticate from "../authorization/authorization.js";
+import { Router } from "express";
 
+var router = Router()
 
-  // Create a new Shift
-  router.post("/", [authenticate], shifts.create);
+// GET all shifts
+// Changed to call the controller function you just wrote
+router.get('/all', shifts.findAll); 
 
-  export default router;
+// Create a new Shift
+router.post("/", [authenticate], shifts.create);
 
+export default router;

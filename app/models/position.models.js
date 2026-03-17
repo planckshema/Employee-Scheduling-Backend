@@ -23,7 +23,11 @@ const Position = SequelizeInstance.define("position", {
   //   type: Sequelize.DATE,
   //   allowNull: true
   // },
-});
+ }, 
+  {
+    timestamps: false,
+  }
+);
 
 export default Position;
 

@@ -20,6 +20,8 @@ const User = SequelizeInstance.define("user", {
     type: Sequelize.STRING,
     allowNull: false,
   },
+  
+
   // refresh_token: {
   //   type: Sequelize.STRING(512),
   //   allowNull: true
@@ -28,7 +30,13 @@ const User = SequelizeInstance.define("user", {
   //   type: Sequelize.DATE,
   //   allowNull: true
   // },
-});
+ }, 
+  {
+    timestamps: false,
+  }
+);
+
+
 
 export default User;
 
