@@ -139,7 +139,7 @@ exports.update = (req, res) => {
 
 // Delete a User with the specified id in the request
 exports.delete = (req, res) => {
-  const id = req.params.EmployeeID;
+  const id = req.params.id;
 
   logger.debug(`Attempting to delete user: ${id}`);
 
