@@ -21,6 +21,8 @@ import TaskListItem from "./taskListItem.model.js";
 import TaskStatus from "./taskStatus.model.js";
 import ShiftSwapRequest from "./shiftSwapRequest.model.js";
 import Shift from "./shift.model.js";
+import Template from "./template.model.js";
+import TemplateShift from "./templateShifts.model.js";
 
 
 const db = {};
@@ -45,6 +47,8 @@ db.taskListItem = TaskListItem;
 db.taskStatus = TaskStatus;
 db.shiftSwapRequest = ShiftSwapRequest;
 db.shift = Shift;
+db.template = Template;
+db.templateShift = TemplateShift;
 
 
 // --- Relationships / Associations ---
@@ -114,5 +118,13 @@ db.shiftSwapRequest.belongsTo(db.shift, { foreignKey: 'ShiftID' });
 // Links for Offering and Accepting Employees
 db.employee.hasMany(db.shiftSwapRequest, { foreignKey: 'EmployeeOfferID', as: 'OfferedSwaps' });
 db.employee.hasMany(db.shiftSwapRequest, { foreignKey: 'EmployeeAcceptID', as: 'AcceptedSwaps' });
+
+// Connecting Shifts to their correct template
+Template.hasMany(TemplateShift, { foreignKey: 'templateId', as: 'shifts' });
+TemplateShift.belongsTo(Template, { foreignKey: 'templateId' });
+
+// In your association file:
+TemplateShift.belongsTo(Employee, { foreignKey: 'EmployeeID', as: 'employee' });
+Employee.hasMany(TemplateShift, { foreignKey: 'EmployeeID' });
 
 export default db;

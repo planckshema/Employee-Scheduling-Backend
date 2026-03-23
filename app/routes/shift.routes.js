@@ -6,9 +6,11 @@ var router = Router()
 
 // GET all shifts
 // Changed to call the controller function you just wrote
-router.get('/all', shifts.findAll); 
+router.get('/', shifts.findAll); 
 
 // Create a new Shift
 router.post("/", [authenticate], shifts.create);
+
+router.delete("/:id", [authenticate], shifts.delete);
 
 export default router;
