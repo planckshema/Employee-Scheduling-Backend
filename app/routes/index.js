@@ -19,7 +19,8 @@ import TaskStatus from "./taskStatus.routes.js";
 import ShiftSwapRequestRoutes from "./shiftSwapRequest.routes.js";
 import ShiftRoutes from "./shift.routes.js";
 import TemplateRoutes from "./template.routes.js";
-import TemplateShiftRoutes from "../models/templateShifts.model.js";
+import TemplateShiftRoutes from "./templateShift.routes.js";
+import TradeRequestShiftRoutes from "./tradeRequestShift.routes.js";
 
 
 const router = Router();
@@ -44,6 +45,7 @@ router.use("/shiftSwapRequests", ShiftSwapRequestRoutes);
 router.use("/shifts", ShiftRoutes);
 router.use("/templates", TemplateRoutes);
 router.use("/templateShifts", TemplateShiftRoutes);
+router.use("/tradeRequestShifts", TradeRequestShiftRoutes);
 
 
 export default router;
