@@ -23,6 +23,7 @@ import ShiftSwapRequest from "./shiftSwapRequest.model.js";
 import Shift from "./shift.model.js";
 import Template from "./template.model.js";
 import TemplateShift from "./templateShifts.model.js";
+import TradeRequestShift from "./tradeRequestShift.model.js";
 
 
 const db = {};
@@ -49,6 +50,7 @@ db.shiftSwapRequest = ShiftSwapRequest;
 db.shift = Shift;
 db.template = Template;
 db.templateShift = TemplateShift;
+db.tradeRequestShift = TradeRequestShift;
 
 
 // --- Relationships / Associations ---
@@ -119,12 +121,35 @@ db.shiftSwapRequest.belongsTo(db.shift, { foreignKey: 'ShiftID' });
 db.employee.hasMany(db.shiftSwapRequest, { foreignKey: 'EmployeeOfferID', as: 'OfferedSwaps' });
 db.employee.hasMany(db.shiftSwapRequest, { foreignKey: 'EmployeeAcceptID', as: 'AcceptedSwaps' });
 
-// Connecting Shifts to their correct template
-Template.hasMany(TemplateShift, { foreignKey: 'templateId', as: 'shifts' });
-TemplateShift.belongsTo(Template, { foreignKey: 'templateId' });
+// 12. Template Shifts (Fixed to use db object)
+db.template.hasMany(db.templateShift, { foreignKey: 'templateId', as: 'shifts' });
+db.templateShift.belongsTo(db.template, { foreignKey: 'templateId' });
 
-// In your association file:
-TemplateShift.belongsTo(Employee, { foreignKey: 'EmployeeID', as: 'employee' });
-Employee.hasMany(TemplateShift, { foreignKey: 'EmployeeID' });
+db.templateShift.belongsTo(db.employee, { foreignKey: 'EmployeeID', as: 'employee' });
+db.employee.hasMany(db.templateShift, { foreignKey: 'EmployeeID' });
+
+// Trade Shift 
+db.tradeRequestShift.belongsTo(db.shift, { foreignKey: 'ShiftID' });
+db.shift.hasMany(db.tradeRequestShift, { foreignKey: 'ShiftID' });
+
+// 2. Linking to the Original Owner (The person giving up the shift)
+db.tradeRequestShift.belongsTo(db.employee, {
+    foreignKey: 'OriginalOwnerID',
+    as: 'OriginalOwner'
+});
+db.employee.hasMany(db.tradeRequestShift, {
+    foreignKey: 'OriginalOwnerID',
+    as: 'OwnedTrades'
+});
+
+// 3. Linking to the Requester (The person claiming the shift)
+db.tradeRequestShift.belongsTo(db.employee, {
+    foreignKey: 'RequesterID',
+    as: 'Requester'
+});
+db.employee.hasMany(db.tradeRequestShift, {
+    foreignKey: 'RequesterID',
+    as: 'ClaimedTrades'
+});
 
 export default db;
