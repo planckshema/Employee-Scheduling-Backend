@@ -23,6 +23,7 @@ import ShiftSwapRequest from "./shiftSwapRequest.model.js";
 import Shift from "./shift.model.js";
 import Template from "./template.model.js";
 import TemplateShift from "./templateShifts.model.js";
+import TradeRequestShift from "./tradeRequestShift.model.js";
 
 
 const db = {};
