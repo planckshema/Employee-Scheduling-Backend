@@ -1,3 +1,4 @@
+import "dotenv/config";
 import routes from "./app/routes/index.js";
 import express from "express";
 import cors from "cors";
@@ -13,9 +14,25 @@ const app = express();
 // HTTP request logger middleware
 app.use(morgan("combined", { stream: logger.stream }));
 
-// Also use the cors middleware as backup
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  "http://localhost:8080",
+  "http://127.0.0.1:8080",
+  "http://localhost:8081",
+  "http://127.0.0.1:8081",
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+].filter(Boolean);
+
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || "http://localhost:8081",
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+      return;
+    }
+
+    callback(new Error(`CORS blocked for origin: ${origin}`));
+  },
   credentials: true,
 };
 app.use(cors(corsOptions));
@@ -26,7 +43,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Load the routes from the routes folder
-app.use("/tutorial", routes);
+app.use( routes);
 
 // set port, listen for requests
 const rawPort = String(process.env.PORT || "3100").trim().replace(/;$/, "");
