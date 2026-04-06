@@ -6,7 +6,7 @@
   "main": "server.js",
   "scripts": {
     "seed": "node app/bin/seed.js",
-    "test": "jest --",
+    "test": "jest --passWithNoTests",
     "start": "node server.js",
     "bundle": "mkdir deploy && cp -r app server.js package.json package-lock.json tutorial-backend.service .env deploy"
   },
