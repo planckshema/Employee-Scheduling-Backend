@@ -3,7 +3,7 @@ import SequelizeInstance from "../config/sequelizeInstance.js";
 
 const EmployeePosition = SequelizeInstance.define("employeePosition", {
   
-    positionId: {
+    employeePositionId: {
     type: Sequelize.INTEGER,
     autoIncrement: true,
     primaryKey: true,
@@ -20,7 +20,11 @@ const EmployeePosition = SequelizeInstance.define("employeePosition", {
   //   type: Sequelize.DATE,
   //   allowNull: true
   // },
-});
+ }, 
+  {
+    timestamps: false,
+  }
+);
 
 export default EmployeePosition;
 

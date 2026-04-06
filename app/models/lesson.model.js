@@ -11,6 +11,10 @@ const Lesson = SequelizeInstance.define("lesson", {
     published: {
       type: Sequelize.BOOLEAN,
     },
-  });
+ }, 
+  {
+    timestamps: false,
+  }
+);
 
 export default Lesson;

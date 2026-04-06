@@ -24,7 +24,11 @@ const TaskList = SequelizeInstance.define("taskList", {
   //   type: Sequelize.DATE,
   //   allowNull: true
   // },
-});
+ }, 
+  {
+    timestamps: false,
+  }
+);
 
 export default TaskList;
 

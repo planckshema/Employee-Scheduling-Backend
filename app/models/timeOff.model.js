@@ -28,7 +28,11 @@ const TimeOff = SequelizeInstance.define("timeOff", {
   //   type: Sequelize.DATE,
   //   allowNull: true
   // },
-});
+ }, 
+  {
+    timestamps: false,
+  }
+);
 
 export default TimeOff;
 

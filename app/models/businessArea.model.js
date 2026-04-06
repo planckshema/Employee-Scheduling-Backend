@@ -20,7 +20,11 @@ const BusinessArea = SequelizeInstance.define("businessArea", {
   //   type: Sequelize.DATE,
   //   allowNull: true
   // },
-});
+ }, 
+  {
+    timestamps: false,
+  }
+);
 
 export default BusinessArea;
 

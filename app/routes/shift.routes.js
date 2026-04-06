@@ -1,11 +1,12 @@
 import shifts from "../controllers/shift.controller.js";
+import authenticate from "../authorization/authorization.js";
 import { Router } from "express";
 
 var router = Router();
 
-router.post("/", shifts.create);
 router.get("/", shifts.findAll);
-router.put("/:id", shifts.update);
-router.delete("/:id", shifts.delete);
+router.post("/", [authenticate], shifts.create);
+router.put("/:id", [authenticate], shifts.update);
+router.delete("/:id", [authenticate], shifts.delete);
 
 export default router;

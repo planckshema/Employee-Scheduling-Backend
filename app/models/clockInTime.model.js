@@ -28,7 +28,11 @@ const ClockInTime = SequelizeInstance.define("clockInTime", {
   //   type: Sequelize.DATE,
   //   allowNull: true
   // },
-});
+ }, 
+  {
+    timestamps: false,
+  }
+);
 
 export default ClockInTime;
 

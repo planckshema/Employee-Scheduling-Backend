@@ -24,7 +24,11 @@ const TaskStatus = SequelizeInstance.define("taskStatus", {
   //   type: Sequelize.DATE,
   //   allowNull: true
   // },
-});
+ }, 
+  {
+    timestamps: false,
+  }
+);
 
 export default TaskStatus;
 

@@ -7,7 +7,7 @@ import morgan from "morgan";
 import db from "./app/models/index.js";
 import logger from "./app/config/logger.js";
 
-db.sequelize.sync();
+db.sequelize.sync({ alter: true });
 
 const app = express();
 
@@ -43,7 +43,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Load the routes from the routes folder
-app.use( routes);
+app.use("/tutorial", routes); 
+
 
 // set port, listen for requests
 const rawPort = String(process.env.PORT || "3100").trim().replace(/;$/, "");

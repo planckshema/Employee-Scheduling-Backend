@@ -19,7 +19,11 @@ const Schedule = SequelizeInstance.define("schedule", {
     type: Sequelize.DATE,
     allowNull: false,
   },
-});
+ }, 
+  {
+    timestamps: false,
+  }
+);
 
 export default Schedule;
 

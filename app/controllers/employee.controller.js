@@ -2,24 +2,250 @@ import db from "../models/index.js";
 import logger from "../config/logger.js";
 
 const Employee = db.employee;
+const User = db.user;
+const Shift = db.shift;
+const TimeOff = db.timeOff;
+const EmployeeAvailability = db.employeeAvailability;
 const Op = db.Sequelize.Op;
 const exports = {};
 
+const dayConfigs = [
+  { dayKey: "mon", label: "Monday", index: 1 },
+  { dayKey: "tue", label: "Tuesday", index: 2 },
+  { dayKey: "wed", label: "Wednesday", index: 3 },
+  { dayKey: "thu", label: "Thursday", index: 4 },
+  { dayKey: "fri", label: "Friday", index: 5 },
+  { dayKey: "sat", label: "Saturday", index: 6 },
+  { dayKey: "sun", label: "Sunday", index: 0 },
+];
+
+const defaultAvailability = () =>
+  dayConfigs.map((day) => ({
+    dayKey: day.dayKey,
+    label: day.label,
+    available: day.index >= 1 && day.index <= 5,
+    startTime: day.index >= 1 && day.index <= 5 ? "09:00" : "",
+    endTime: day.index >= 1 && day.index <= 5 ? "17:00" : "",
+  }));
+
+const extractEmployeePayload = (body) => ({
+  EmployeeID: body.EmployeeID ?? body.id ?? null,
+  firstName: body.firstName || body.fName || "",
+  lastName: body.lastName || body.lName || "",
+  email: body.email || "",
+  phoneNum: body.phoneNum || "",
+  school: body.school || "",
+  schoolYear: body.schoolYear || "",
+  major: body.major || "",
+  studentId: body.studentId || "",
+});
+
+const parseLocalDate = (value) => {
+  if (!value) {
+    return null;
+  }
+
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime())
+      ? null
+      : new Date(value.getFullYear(), value.getMonth(), value.getDate());
+  }
+
+  const raw = String(value).slice(0, 10);
+  const match = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) {
+    return null;
+  }
+
+  const year = Number(match[1]);
+  const monthIndex = Number(match[2]) - 1;
+  const day = Number(match[3]);
+  const parsed = new Date(year, monthIndex, day);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
+const toDateTime = (dateValue, timeValue) => {
+  const date = parseLocalDate(dateValue);
+  if (!date || !timeValue) {
+    return null;
+  }
+
+  const [hours, minutes, secondsRaw] = String(timeValue).split(":");
+  const hoursNumber = Number(hours);
+  const minutesNumber = Number(minutes);
+  const secondsNumber = Number(secondsRaw || "0");
+
+  if ([hoursNumber, minutesNumber, secondsNumber].some(Number.isNaN)) {
+    return null;
+  }
+
+  const parsed = new Date(date);
+  parsed.setHours(hoursNumber, minutesNumber, secondsNumber, 0);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
+const formatTime = (value) => {
+  if (!value) {
+    return "";
+  }
+
+  const raw = String(value);
+  const timeMatch = raw.match(/^(\d{2}):(\d{2})/);
+  if (timeMatch) {
+    return `${timeMatch[1]}:${timeMatch[2]}`;
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+};
+
+const parseShiftMeta = (value) => {
+  try {
+    const parsed = JSON.parse(value);
+    if (parsed && typeof parsed === "object") {
+      return parsed;
+    }
+  } catch (err) {
+    // Some rows still store plain labels in `day`.
+  }
+
+  return {
+    label: value || "",
+    position: "",
+    dayKey: "",
+    taskListId: null,
+  };
+};
+
+const getStartOfWeek = (dateValue) => {
+  const date = new Date(dateValue);
+  const day = date.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  date.setDate(date.getDate() + diff);
+  date.setHours(0, 0, 0, 0);
+  return date;
+};
+
+const sameLocalDay = (first, second) =>
+  first.getFullYear() === second.getFullYear() &&
+  first.getMonth() === second.getMonth() &&
+  first.getDate() === second.getDate();
+
+const initialsFor = (firstName, lastName, email) =>
+  [firstName?.[0], lastName?.[0]]
+    .filter(Boolean)
+    .join("")
+    .toUpperCase() || String(email || "?").slice(0, 2).toUpperCase();
+
+const normalizeAvailability = (availabilityText) => {
+  if (!availabilityText) {
+    return defaultAvailability();
+  }
+
+  let parsed = availabilityText;
+  if (typeof availabilityText === "string") {
+    try {
+      parsed = JSON.parse(availabilityText);
+    } catch (err) {
+      return defaultAvailability();
+    }
+  }
+
+  const entries = Array.isArray(parsed)
+    ? parsed
+    : Array.isArray(parsed?.weeklyAvailability)
+      ? parsed.weeklyAvailability
+      : [];
+
+  const byDayKey = new Map(
+    entries
+      .filter((entry) => entry && typeof entry === "object")
+      .map((entry) => [String(entry.dayKey || "").toLowerCase(), entry]),
+  );
+
+  return dayConfigs.map((day) => {
+    const match = byDayKey.get(day.dayKey);
+    const available = Boolean(match?.available);
+    return {
+      dayKey: day.dayKey,
+      label: day.label,
+      available,
+      startTime: available ? String(match?.startTime || "09:00").slice(0, 5) : "",
+      endTime: available ? String(match?.endTime || "17:00").slice(0, 5) : "",
+    };
+  });
+};
+
+const formatAvailabilitySummary = (row) =>
+  row.available && row.startTime && row.endTime
+    ? `${row.startTime} - ${row.endTime}`
+    : "Unavailable";
+
+const mapShiftForDashboard = (row) => {
+  const meta = parseShiftMeta(row.day);
+  const dateValue = parseLocalDate(row.startDate);
+  const startTime = formatTime(row.startTime);
+  const endTime = formatTime(row.endTime);
+  const startAt = toDateTime(row.startDate, startTime);
+  const endAt = toDateTime(row.startDate, endTime);
+  const durationHours =
+    startAt && endAt ? Math.max(0, (endAt.getTime() - startAt.getTime()) / 3600000) : 0;
+
+  return {
+    shiftId: row.shiftId,
+    date: dateValue ? dateValue.toISOString().slice(0, 10) : row.startDate,
+    dayLabel: meta.label || (dateValue ? dayConfigs.find((day) => day.index === dateValue.getDay())?.label : ""),
+    dayKey:
+      meta.dayKey ||
+      (dateValue ? dayConfigs.find((day) => day.index === dateValue.getDay())?.dayKey : ""),
+    position: meta.position || "Shift",
+    taskListId: meta.taskListId || null,
+    startTime,
+    endTime,
+    startAt: startAt ? startAt.toISOString() : null,
+    endAt: endAt ? endAt.toISOString() : null,
+    durationHours: Number(durationHours.toFixed(2)),
+  };
+};
+
+const resolveEmployeeForUser = async (user) => {
+  if (!user) {
+    return null;
+  }
+
+  let employee = null;
+
+  if (user.EmployeeID) {
+    employee = await Employee.findByPk(user.EmployeeID);
+  }
+
+  if (!employee && user.email) {
+    employee = await Employee.findOne({ where: { email: user.email } });
+  }
+
+  if (employee && user.EmployeeID !== employee.EmployeeID) {
+    await User.update({ EmployeeID: employee.EmployeeID }, { where: { id: user.id } });
+  }
+
+  return employee;
+};
+
 exports.create = async (req, res) => {
-  if (!req.body.firstName || !req.body.lastName || !req.body.email) {
+  const payload = extractEmployeePayload(req.body);
+
+  if (!payload.firstName || !payload.lastName || !payload.email) {
+    logger.warn("Employee creation attempt with missing required fields");
     return res.status(400).send({ message: "firstName, lastName, and email are required" });
   }
 
   try {
-    const employee = await Employee.create({
-      firstName: req.body.firstName,
-      lastName: req.body.lastName,
-      email: req.body.email,
-      phoneNum: req.body.phoneNum || "",
-    });
-
-    logger.info(`Employee created successfully: ${employee.EmployeeID}`);
-    return res.send(employee);
+    const employee = await Employee.create(payload);
+    logger.info(`Employee created successfully: ${employee.EmployeeID} - ${employee.email}`);
+    return res.status(201).send(employee);
   } catch (err) {
     logger.error(`Error creating employee: ${err.message}`);
     return res.status(500).send({
@@ -29,10 +255,11 @@ exports.create = async (req, res) => {
 };
 
 exports.findAll = async (req, res) => {
-  const search = req.query.search;
+  const search = req.query.search || req.query.id;
   const condition = search
     ? {
         [Op.or]: [
+          { EmployeeID: { [Op.like]: `%${search}%` } },
           { firstName: { [Op.like]: `%${search}%` } },
           { lastName: { [Op.like]: `%${search}%` } },
           { email: { [Op.like]: `%${search}%` } },
@@ -41,7 +268,12 @@ exports.findAll = async (req, res) => {
     : undefined;
 
   try {
-    const employees = await Employee.findAll({ where: condition, order: [["EmployeeID", "DESC"]] });
+    const employees = await Employee.findAll({
+      where: condition,
+      order: [["EmployeeID", "DESC"]],
+    });
+
+    logger.info(`Retrieved ${employees.length} employees`);
     return res.send(employees);
   } catch (err) {
     logger.error(`Error retrieving employees: ${err.message}`);
@@ -55,49 +287,336 @@ exports.findOne = async (req, res) => {
   try {
     const employee = await Employee.findByPk(req.params.id);
     if (!employee) {
-      return res.status(404).send({ message: `Employee with id=${req.params.id} not found.` });
+      logger.warn(`Employee not found with id: ${req.params.id}`);
+      return res.status(404).send({ message: `Cannot find Employee with id=${req.params.id}.` });
     }
+
     return res.send(employee);
   } catch (err) {
     logger.error(`Error retrieving employee ${req.params.id}: ${err.message}`);
-    return res.status(500).send({ message: "Error retrieving employee." });
+    return res.status(500).send({
+      message: "Error retrieving Employee with id=" + req.params.id,
+    });
+  }
+};
+
+exports.findByEmail = async (req, res) => {
+  const email = req.params.email;
+
+  try {
+    const employee = await Employee.findOne({ where: { email } });
+    if (!employee) {
+      logger.warn(`Employee not found with email: ${email}`);
+      return res.send({ email: "not found" });
+    }
+
+    return res.send(employee);
+  } catch (err) {
+    logger.error(`Error retrieving employee by email ${email}: ${err.message}`);
+    return res.status(500).send({
+      message: "Error retrieving Employee with email=" + email,
+    });
   }
 };
 
 exports.update = async (req, res) => {
+  const id = req.params.id ?? req.params.EmployeeID;
+  const payload = extractEmployeePayload(req.body);
+
   try {
     const [updated] = await Employee.update(
       {
-        firstName: req.body.firstName,
-        lastName: req.body.lastName,
-        email: req.body.email,
-        phoneNum: req.body.phoneNum,
+        firstName: payload.firstName,
+        lastName: payload.lastName,
+        email: payload.email,
+        phoneNum: payload.phoneNum,
+        school: payload.school,
+        schoolYear: payload.schoolYear,
+        major: payload.major,
+        studentId: payload.studentId,
       },
-      { where: { EmployeeID: req.params.id } },
+      { where: { EmployeeID: id } },
     );
 
     if (updated !== 1) {
-      return res.status(404).send({ message: `Cannot update Employee with id=${req.params.id}.` });
+      logger.warn(`Failed to update employee ${id}`);
+      return res.status(404).send({ message: `Cannot update Employee with id=${id}.` });
     }
 
-    const employee = await Employee.findByPk(req.params.id);
+    const employee = await Employee.findByPk(id);
     return res.send(employee);
   } catch (err) {
-    logger.error(`Error updating employee ${req.params.id}: ${err.message}`);
-    return res.status(500).send({ message: "Error updating employee." });
+    logger.error(`Error updating employee ${id}: ${err.message}`);
+    return res.status(500).send({
+      message: "Error updating Employee with id=" + id,
+    });
   }
 };
 
 exports.delete = async (req, res) => {
+  const id = req.params.id;
+
   try {
-    const deleted = await Employee.destroy({ where: { EmployeeID: req.params.id } });
+    const deleted = await Employee.destroy({ where: { EmployeeID: id } });
     if (deleted !== 1) {
-      return res.status(404).send({ message: `Cannot delete Employee with id=${req.params.id}.` });
+      logger.warn(`Cannot delete employee ${id} - not found`);
+      return res.status(404).send({ message: `Cannot delete Employee with id=${id}.` });
     }
+
     return res.send({ message: "Employee deleted successfully." });
   } catch (err) {
-    logger.error(`Error deleting employee ${req.params.id}: ${err.message}`);
-    return res.status(500).send({ message: "Error deleting employee." });
+    logger.error(`Error deleting employee ${id}: ${err.message}`);
+    return res.status(500).send({
+      message: "Could not delete Employee with id=" + id,
+    });
+  }
+};
+
+exports.getAvailabilityIndex = async (_req, res) => {
+  try {
+    const rows = await EmployeeAvailability.findAll({
+      order: [["EmployeeID", "ASC"]],
+    });
+
+    const availability = rows.map((row) => ({
+      EmployeeID: row.EmployeeID,
+      availabilityText: row.availabilityText || "",
+      availability: normalizeAvailability(row.availabilityText).map((entry) => ({
+        ...entry,
+        summary: formatAvailabilitySummary(entry),
+      })),
+    }));
+
+    return res.send(availability);
+  } catch (err) {
+    logger.error(`Error retrieving employee availability index: ${err.message}`);
+    return res.status(500).send({
+      message: err.message || "Some error occurred while retrieving employee availability.",
+    });
+  }
+};
+
+exports.getProfile = async (req, res) => {
+  const userId = req.params.userId || req.params.id;
+
+  try {
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).send({ message: `Cannot find User with id=${userId}.` });
+    }
+
+    const employee = await resolveEmployeeForUser(user);
+    if (!employee) {
+      return res.status(404).send({ message: "Employee profile not found." });
+    }
+
+    return res.send(employee);
+  } catch (err) {
+    logger.error(`Error retrieving employee profile for user ${userId}: ${err.message}`);
+    return res.status(500).send({
+      message: err.message || "Some error occurred while retrieving the employee profile.",
+    });
+  }
+};
+
+exports.createProfile = async (req, res) => {
+  const userId = req.params.userId || req.params.id;
+
+  try {
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).send({ message: `Cannot find User with id=${userId}.` });
+    }
+
+    const existing = await resolveEmployeeForUser(user);
+    const payload = extractEmployeePayload({
+      ...req.body,
+      email: req.body.email || user.email,
+      firstName: req.body.firstName || user.fName,
+      lastName: req.body.lastName || user.lName,
+    });
+
+    if (!payload.firstName || !payload.lastName || !payload.email || !payload.school || !payload.schoolYear) {
+      return res.status(400).send({
+        message: "firstName, lastName, email, school, and schoolYear are required.",
+      });
+    }
+
+    let employee = existing;
+    if (employee) {
+      await Employee.update(payload, { where: { EmployeeID: employee.EmployeeID } });
+      employee = await Employee.findByPk(employee.EmployeeID);
+    } else {
+      employee = await Employee.create(payload);
+    }
+
+    if (user.EmployeeID !== employee.EmployeeID) {
+      await User.update({ EmployeeID: employee.EmployeeID }, { where: { id: user.id } });
+    }
+
+    return res.status(existing ? 200 : 201).send(employee);
+  } catch (err) {
+    logger.error(`Error creating employee profile for user ${userId}: ${err.message}`);
+    return res.status(500).send({
+      message: err.message || "Some error occurred while creating the employee profile.",
+    });
+  }
+};
+
+exports.getDashboard = async (req, res) => {
+  const userId = req.params.userId || req.params.id;
+
+  try {
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).send({ message: `Cannot find User with id=${userId}.` });
+    }
+
+    const employee = await resolveEmployeeForUser(user);
+    if (!employee) {
+      return res.status(404).send({ message: "Employee profile not found." });
+    }
+
+    const [availabilityRecord, shifts, timeOffs] = await Promise.all([
+      EmployeeAvailability.findOne({ where: { EmployeeID: employee.EmployeeID } }),
+      Shift.findAll({
+        where: { EmployeeID: employee.EmployeeID },
+        order: [["startDate", "ASC"], ["startTime", "ASC"]],
+      }),
+      TimeOff.findAll({
+        where: { EmployeeID: employee.EmployeeID },
+        order: [["startDate", "DESC"]],
+      }),
+    ]);
+
+    const availability = normalizeAvailability(availabilityRecord?.availabilityText);
+    const mappedShifts = shifts.map(mapShiftForDashboard);
+    const now = new Date();
+    const weekStart = getStartOfWeek(now);
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekEnd.getDate() + 7);
+
+    const weekDays = dayConfigs.map((day, offset) => {
+      const date = new Date(weekStart);
+      date.setDate(weekStart.getDate() + offset);
+      const shiftsForDay = mappedShifts.filter((shift) => {
+        const shiftDate = parseLocalDate(shift.date);
+        return shiftDate ? sameLocalDay(shiftDate, date) : false;
+      });
+
+      return {
+        dayKey: day.dayKey,
+        label: day.label,
+        date: date.toISOString().slice(0, 10),
+        shiftCount: shiftsForDay.length,
+        shifts: shiftsForDay,
+      };
+    });
+
+    const upcomingShifts = mappedShifts
+      .filter((shift) => {
+        if (!shift.endAt) {
+          return false;
+        }
+        return new Date(shift.endAt).getTime() >= now.getTime();
+      })
+      .slice(0, 6);
+
+    const weeklyHours = weekDays
+      .flatMap((day) => day.shifts)
+      .reduce((total, shift) => total + shift.durationHours, 0);
+
+    const timeOffHistory = timeOffs.slice(0, 6).map((row) => ({
+      timeOffId: row.TimeOffId,
+      startDate: row.startDate ? new Date(row.startDate).toISOString().slice(0, 10) : "",
+      endDate: row.endDate ? new Date(row.endDate).toISOString().slice(0, 10) : "",
+      reason: row.reasons || "",
+    }));
+
+    return res.send({
+      profile: {
+        userId: user.id,
+        employeeId: employee.EmployeeID,
+        firstName: employee.firstName || user.fName || "",
+        lastName: employee.lastName || user.lName || "",
+        name:
+          [employee.firstName || user.fName, employee.lastName || user.lName]
+            .filter(Boolean)
+            .join(" ")
+            .trim() || user.email,
+        email: employee.email || user.email || "",
+        phoneNum: employee.phoneNum || "",
+        school: employee.school || "",
+        schoolYear: employee.schoolYear || "",
+        major: employee.major || "",
+        studentId: employee.studentId || "",
+        initials: initialsFor(employee.firstName || user.fName, employee.lastName || user.lName, employee.email || user.email),
+      },
+      summary: {
+        nextShift: upcomingShifts[0] || null,
+        weeklyHours: Number(weeklyHours.toFixed(2)),
+        totalUpcomingShifts: upcomingShifts.length,
+        availableDays: availability.filter((day) => day.available).length,
+      },
+      weeklySchedule: weekDays,
+      upcomingShifts,
+      availability: availability.map((row) => ({
+        ...row,
+        summary: formatAvailabilitySummary(row),
+      })),
+      timeOffHistory,
+    });
+  } catch (err) {
+    logger.error(`Error building employee dashboard for user ${userId}: ${err.message}`);
+    return res.status(500).send({
+      message: err.message || "Some error occurred while retrieving the employee dashboard.",
+    });
+  }
+};
+
+exports.updateAvailability = async (req, res) => {
+  const userId = req.params.userId || req.params.id;
+
+  try {
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).send({ message: `Cannot find User with id=${userId}.` });
+    }
+
+    const employee = await resolveEmployeeForUser(user);
+    if (!employee) {
+      return res.status(404).send({ message: "Employee profile not found." });
+    }
+    const availability = normalizeAvailability(
+      req.body.weeklyAvailability || req.body.availability || req.body,
+    );
+
+    const existing = await EmployeeAvailability.findOne({
+      where: { EmployeeID: employee.EmployeeID },
+    });
+
+    if (existing) {
+      existing.availabilityText = JSON.stringify(availability);
+      await existing.save();
+    } else {
+      await EmployeeAvailability.create({
+        EmployeeID: employee.EmployeeID,
+        availabilityText: JSON.stringify(availability),
+      });
+    }
+
+    return res.send({
+      employeeId: employee.EmployeeID,
+      availability: availability.map((row) => ({
+        ...row,
+        summary: formatAvailabilitySummary(row),
+      })),
+    });
+  } catch (err) {
+    logger.error(`Error updating employee availability for user ${userId}: ${err.message}`);
+    return res.status(500).send({
+      message: err.message || "Some error occurred while saving availability.",
+    });
   }
 };
 

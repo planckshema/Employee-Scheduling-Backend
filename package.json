@@ -5,6 +5,7 @@
   "description": "Tutorial Node.js with Rest API",
   "main": "server.js",
   "scripts": {
+    "seed": "node app/bin/seed.js",
     "test": "jest --",
     "start": "node server.js",
     "bundle": "mkdir deploy && cp -r app server.js package.json package-lock.json tutorial-backend.service .env deploy"
@@ -17,7 +18,7 @@
   "author": "cs",
   "license": "ISC",
   "dependencies": {
-    "cors": "^2.8.5",
+    "cors": "^2.8.6",
     "dotenv": "^16.0.0",
     "express": "^4.17.3",
     "express-winston": "^4.2.0",
