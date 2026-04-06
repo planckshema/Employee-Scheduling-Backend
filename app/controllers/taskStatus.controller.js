@@ -1,48 +1,34 @@
-import db  from "../models/index.js";
+import db from "../models/index.js";
 import logger from "../config/logger.js";
 
 const TaskStatus = db.taskStatus;
-const Op = db.Sequelize.Op;
 const exports = {};
 
-
-// Code to change
-// Create and Save a new User
+// Create and save a new task status
 exports.create = (req, res) => {
-  // Validate request
-  if (!req.body.fName) {
-    logger.warn('User creation attempt with empty fName');
-    res.status(400).send({
-      message: "Content can not be empty!",
-    });
+  if (!req.body.status || !req.body.dateTime) {
+    logger.warn("Task status creation attempt with missing required fields");
+    res.status(400).send({ message: "Content can not be empty!" });
     return;
   }
 
-  // Create a User
-  const user = {
-    id: req.body.id,
-    fName: req.body.fName,
-    lName: req.body.lName,
-    email: req.body.email,
-    // refresh_token: req.body.refresh_token,
-    // expiration_date: req.body.expiration_date
+  const taskStatus = {
+    status: req.body.status,
+    dateTime: req.body.dateTime,
   };
 
-  logger.debug(`Creating user: ${user.email}`);
-
-  // Save User in the database
-  User.create(user)
+  TaskStatus.create(taskStatus)
     .then((data) => {
-      logger.info(`User created successfully: ${data.id} - ${data.email}`);
+      logger.info(`Task status created successfully: ${data.taskStatusId}`);
       res.send(data);
     })
     .catch((err) => {
-      logger.error(`Error creating user: ${err.message}`);
+      logger.error(`Error creating task status: ${err.message}`);
       res.status(500).send({
-        message: err.message || "Some error occurred while creating the User.",
+        message:
+          err.message || "Some error occurred while creating the Task Status.",
       });
     });
 };
-
 
 export default exports;

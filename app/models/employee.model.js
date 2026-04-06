@@ -23,6 +23,27 @@ const Employee = SequelizeInstance.define("employee", {
   phoneNum: {
     type: Sequelize.STRING,
     allowNull: false,
+    defaultValue: "",
+  },
+  school: {
+    type: Sequelize.STRING,
+    allowNull: false,
+    defaultValue: "",
+  },
+  schoolYear: {
+    type: Sequelize.STRING,
+    allowNull: false,
+    defaultValue: "",
+  },
+  major: {
+    type: Sequelize.STRING,
+    allowNull: false,
+    defaultValue: "",
+  },
+  studentId: {
+    type: Sequelize.STRING,
+    allowNull: false,
+    defaultValue: "",
   },
 
  }, 

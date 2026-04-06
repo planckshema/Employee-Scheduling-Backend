@@ -1,10 +1,9 @@
-name: AWS DEPLOY TO PRODUCTION
-# Deploy on push to main branch
+name: Deploy to Production
 
 on:
   push:
     branches:
-      - main
+      - dev
 
 jobs:
   aws-deploy:
@@ -20,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: main
+          ref: ${{ github.ref }}
       - uses: actions/setup-node@v5
         with:
           node-version: 24

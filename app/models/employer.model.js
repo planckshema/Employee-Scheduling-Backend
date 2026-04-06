@@ -30,6 +30,22 @@ const Employer = SequelizeInstance.define("employer", {
   phoneNum: {
     type: Sequelize.STRING,
     allowNull: false,
+    defaultValue: "",
+  },
+  niche: {
+    type: Sequelize.STRING,
+    allowNull: false,
+    defaultValue: "",
+  },
+  operatingHours: {
+    type: Sequelize.STRING,
+    allowNull: false,
+    defaultValue: "",
+  },
+  description: {
+    type: Sequelize.TEXT,
+    allowNull: false,
+    defaultValue: "",
   },
 },
   {
