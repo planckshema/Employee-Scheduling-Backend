@@ -2,13 +2,11 @@ import shifts from "../controllers/shift.controller.js";
 import authenticate from "../authorization/authorization.js";
 import { Router } from "express";
 
-var router = Router()
+var router = Router();
 
-// GET all shifts
-// Changed to call the controller function you just wrote
-router.get('/all', shifts.findAll); 
-
-// Create a new Shift
+router.get("/", shifts.findAll);
 router.post("/", [authenticate], shifts.create);
+router.put("/:id", [authenticate], shifts.update);
+router.delete("/:id", [authenticate], shifts.delete);
 
 export default router;

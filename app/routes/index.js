@@ -18,13 +18,15 @@ import TaskListItemRoutes from "./taskListItem.routes.js";
 import TaskStatus from "./taskStatus.routes.js";
 import ShiftSwapRequestRoutes from "./shiftSwapRequest.routes.js";
 import ShiftRoutes from "./shift.routes.js";
-
+import TemplateRoutes from "./template.routes.js";
+import TemplateShiftRoutes from "./templateShift.routes.js";
+import TradeRequestShiftRoutes from "./tradeRequestShift.routes.js";
 
 const router = Router();
 
 router.use("/", AuthRoutes);
 router.use("/timeOff", TimeOffRoutes);
-router.use("notifications", NotificationRoutes);
+router.use("/notifications", NotificationRoutes);
 router.use("/businessArea", BusinessArea);
 router.use("/employeePositions", EmployeePosition);
 router.use("/positions", PositionRoutes);
@@ -40,6 +42,8 @@ router.use("/taskListItems", TaskListItemRoutes);
 router.use("/taskStatus", TaskStatus);
 router.use("/shiftSwapRequests", ShiftSwapRequestRoutes);
 router.use("/shifts", ShiftRoutes);
-
+router.use("/templates", TemplateRoutes);
+router.use("/templateShifts", TemplateShiftRoutes);
+router.use("/tradeRequestShifts", TradeRequestShiftRoutes);
 
 export default router;

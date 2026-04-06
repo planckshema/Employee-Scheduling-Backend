@@ -1,11 +1,15 @@
-import db  from "../models/index.js";
+import db from "../models/index.js";
 import logger from "../config/logger.js";
 
 const Session = db.session;
 
 const authenticate = (req, res, next) => {
+  if (process.env.SKIP_AUTH === 'true') {
+    logger.debug("Bypassing authentication for local development.");
+    return next();
+  }
+
   let token = null;
- 
   let authHeader = req.get("authorization");
   if (authHeader != null) {
     if (authHeader.startsWith("Bearer ")) {
