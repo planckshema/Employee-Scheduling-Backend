@@ -141,4 +141,28 @@ exports.getPendingCount = (req, res) => {
         });
 };
 
+// Reset trade request to 'Available' and clear the requester
+exports.decline = (req, res) => {
+
+    const id = req.params.id;
+
+    TradeRequestShift.update(
+        {
+            status: 'Available',
+            RequesterID: null
+        },
+        { where: { TradeRequestID: id } }
+    )
+        .then(num => {
+            if (num == 1) {
+                res.send({ message: "Trade request declined and reset to Available." });
+            } else {
+                res.status(404).send({ message: `Cannot decline trade with id=${id}.` });
+            }
+        })
+        .catch(err => {
+            res.status(500).send({ message: "Error declining trade request." });
+        });
+};
+
 export default exports;
