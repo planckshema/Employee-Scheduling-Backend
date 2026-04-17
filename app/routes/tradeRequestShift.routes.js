@@ -10,6 +10,8 @@ router.post("/", [authenticate], tradeRequestShift.create);
 // Retrieve all Trade Requests (Main board view)
 router.get("/", [authenticate], tradeRequestShift.findAll);
 
+router.get("/pending-count", [authenticate], tradeRequestShift.getPendingCount);
+
 // Retrieve a single Trade Request with id
 router.get("/:id", [authenticate], tradeRequestShift.findOne);
 

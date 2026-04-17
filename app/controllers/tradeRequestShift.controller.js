@@ -129,4 +129,16 @@ exports.getAvailableShiftsForBoard = async (req, res) => {
     }
 };
 
+exports.getPendingCount = (req, res) => {
+    TradeRequestShift.count({
+        where: { status: 'Pending' }
+    })
+        .then(count => {
+            res.send({ pendingCount: count });
+        })
+        .catch(err => {
+            res.status(500).send({ message: "Error counting pending trades." });
+        });
+};
+
 export default exports;
