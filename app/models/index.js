@@ -24,6 +24,8 @@ import Shift from "./shift.model.js";
 import Template from "./template.model.js";
 import TemplateShift from "./templateShifts.model.js";
 import TradeRequestShift from "./tradeRequestShift.model.js";
+import Admin from "./admin.model.js";
+
 
 
 const db = {};
@@ -51,6 +53,7 @@ db.shift = Shift;
 db.template = Template;
 db.templateShift = TemplateShift;
 db.tradeRequestShift = TradeRequestShift;
+db.admin = Admin;
 
 
 // --- Relationships / Associations ---
