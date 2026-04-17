@@ -1,5 +1,4 @@
 import Admin from "../models/admin.model.js";
-import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import authConfig from "../config/auth.config.js";
 
@@ -23,9 +22,9 @@ export default {
       // DEBUG 3: See the hash we found in the DB
       console.log("User found. Comparing passwords...");
 
-      const match = await bcrypt.compare(password, admin.password);
-      if (!match) {
-        // DEBUG 4: If this hits, the password you typed doesn't match the hash
+      // Plain text comparison instead of bcrypt
+      if (password !== admin.password) {
+        // DEBUG 4: If this hits, the strings simply don't match
         console.log("Password mismatch for user:", username);
         return res.status(401).json({ message: "Invalid credentials." });
       }
@@ -41,7 +40,7 @@ export default {
 
     } catch (err) {
       // This will now show the REAL error (like "Table 'schedule.admin' doesn't exist")
-      console.error("DATABASE OR SYSTEM ERROR:", err); 
+      console.error("DATABASE OR SYSTEM ERROR:", err);
       res.status(500).json({ message: "Server error." });
     }
   },
