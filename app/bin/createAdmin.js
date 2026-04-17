@@ -1,14 +1,15 @@
 import Admin from "../models/admin.model.js";
-import bcrypt from "bcrypt";
 import sequelize from "../config/sequelizeInstance.js"; 
 
 await sequelize.sync();
 
 const username = "admin";
-const password = "yourpassword"; 
+const password = "password"; 
 
-const hash = await bcrypt.hash(password, 10);
-await Admin.create({ username, password: hash });
+await Admin.create({ 
+  username: username, 
+  password: password 
+});
 
-console.log("Admin account created successfully.");
+console.log("Admin account created successfully (Plain Text).");
 process.exit();

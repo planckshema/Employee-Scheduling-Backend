@@ -4,44 +4,46 @@ import authConfig from "../config/auth.config.js";
 
 export default {
   async login(req, res) {
-    const { username, password } = req.body;
+    // .trim() helps prevent "User not found" due to accidental spaces
+    const username = req.body.username ? req.body.username.trim() : "";
+    const password = req.body.password;
 
-    // DEBUG 1: See what the frontend is actually sending
-    console.log("Login attempt for:", username);
+    console.log(`--- Login Attempt: ${username} ---`);
 
     try {
-      // Sequelize will try to find 'admins' based on your model name
       const admin = await Admin.findOne({ where: { username } });
 
       if (!admin) {
-        // DEBUG 2: If this hits, the table is empty or the username is wrong
-        console.log("User not found in database.");
-        return res.status(401).json({ message: "Invalid credentials." });
+        console.log("Result: [401] Username not found in database.");
+        return res.status(401).json({ message: "Invalid username or password." });
       }
 
-      // DEBUG 3: See the hash we found in the DB
-      console.log("User found. Comparing passwords...");
-
-      // Plain text comparison instead of bcrypt
+      // Plain text comparison check
       if (password !== admin.password) {
-        // DEBUG 4: If this hits, the strings simply don't match
-        console.log("Password mismatch for user:", username);
-        return res.status(401).json({ message: "Invalid credentials." });
+        console.log("Result: [401] Password mismatch.");
+        // We send the same message for security so hackers don't know which part was wrong
+        return res.status(401).json({ message: "Invalid username or password." });
       }
 
+      // Generate Token
       const token = jwt.sign(
         { id: admin.id, isAdmin: true },
         authConfig.secret,
         { expiresIn: "8h" }
       );
 
-      console.log("Login successful! Token generated.");
-      res.json({ token, isAdmin: true });
+      console.log("Result: [200] Login successful! Token generated.");
+      
+      // Send the user data back to the frontend
+      res.json({ 
+        token, 
+        isAdmin: true,
+        username: admin.username 
+      });
 
     } catch (err) {
-      // This will now show the REAL error (like "Table 'schedule.admin' doesn't exist")
-      console.error("DATABASE OR SYSTEM ERROR:", err);
-      res.status(500).json({ message: "Server error." });
+      console.error("DATABASE ERROR:", err.message);
+      res.status(500).json({ message: "Internal Server Error." });
     }
   },
 };
