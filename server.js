@@ -14,19 +14,29 @@ const app = express();
 // HTTP request logger middleware
 app.use(morgan("combined", { stream: logger.stream }));
 
+const parseConfiguredOrigins = (value) =>
+  String(value || "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
 const allowedOrigins = [
-  process.env.FRONTEND_URL,
+  ...parseConfiguredOrigins(process.env.FRONTEND_URL),
+  ...parseConfiguredOrigins(process.env.ALLOWED_ORIGINS),
+  "https://project3.eaglesoftwareteam.com",
   "http://localhost:8080",
   "http://127.0.0.1:8080",
   "http://localhost:8081",
   "http://127.0.0.1:8081",
   "http://localhost:5173",
   "http://127.0.0.1:5173",
-].filter(Boolean);
+];
+
+const uniqueAllowedOrigins = [...new Set(allowedOrigins)];
 
 const corsOptions = {
   origin(origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin || uniqueAllowedOrigins.includes(origin)) {
       callback(null, true);
       return;
     }

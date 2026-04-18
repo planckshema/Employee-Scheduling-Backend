@@ -9,8 +9,6 @@ const User = db.user;
 const Session = db.session;
 const Op = db.Sequelize.Op;
 
-let googleUser = {};
-
 const google_id = process.env.CLIENT_ID;
 
 const exports = {};
@@ -19,6 +17,7 @@ exports.login = async (req, res) => {
   logger.info('Login attempt initiated');
 
   var googleToken = req.body.credential;
+  let googleUser = {};
 
   const client = new OAuth2Client(google_id);
   async function verify() {
@@ -31,7 +30,12 @@ exports.login = async (req, res) => {
   }
   await verify().catch((err) => {
     logger.error(`Google token verification failed: ${err.message}`);
+    res.status(401).send({ message: "Google sign-in could not be verified." });
   });
+
+  if (res.headersSent) {
+    return;
+  }
 
   let email = googleUser.email;
   let firstName = googleUser.given_name;
@@ -89,6 +93,10 @@ exports.login = async (req, res) => {
       res.status(500).send({ message: err.message });
       return;
     });
+
+  if (res.headersSent) {
+    return;
+  }
 
   // this lets us get the user id
   if (user.id === undefined) {
@@ -177,14 +185,18 @@ exports.login = async (req, res) => {
         }
       }
     })
-    .catch((err) => {
-      logger.error(`Error retrieving session: ${err.message}`);
-      res.status(500).send({
-        message:
-          err.message || "Some error occurred while retrieving sessions.",
+      .catch((err) => {
+        logger.error(`Error retrieving session: ${err.message}`);
+        res.status(500).send({
+          message:
+            err.message || "Some error occurred while retrieving sessions.",
+        });
+        return;
       });
-      return;
-    });
+
+  if (res.headersSent) {
+    return;
+  }
 
   if (session.id === undefined) {
     // create a new Session with an expiration date and save to database
