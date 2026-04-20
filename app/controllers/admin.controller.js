@@ -52,60 +52,43 @@ export default {
   },
 
   // ── Get All Users (The Hierarchy) ────────────────────────────────
-  async getUsers(req, res) {
-    try {
-      const data = await BusinessArea.findAll({
-        // Matching your screenshot: AreaId, Name
-        attributes: ["AreaId", "Name"], 
-        include: [
-          {
-            model: Employer,
-            // Matching your screenshot: employerid, businessName, firstName...
-            attributes: ["employerid", "businessName", "firstName", "lastName", "email"],
-            include: [
-              {
-                model: Employee,
-                as: "staff", // This must match the alias in models/index.js
-                attributes: ["EmployeeID", "firstName", "lastName", "email"]
-              }
-            ]
-          }
-        ]
-      });
-      res.json(data);
-    } catch (err) {
-      console.error("GET USERS ERROR:", err.message);
-      res.status(500).json({ message: err.message });
-    }
-  },
+async getUsers(req, res) {
+  try {
+    // We use the model names defined in your db object
+    const data = await db.employer.findAll({
+      attributes: ["employerid", "businessName", "firstName", "lastName", "email"],
+      include: [
+        {
+          model: db.employee,
+          as: "staff", // This MUST match the 'as' in models/index.js
+          attributes: ["EmployeeID", "firstName", "lastName", "email"]
+        }
+      ]
+    });
+    res.json(data);
+  } catch (err) {
+    // print the EXACT error to console
+    console.error("DATABASE ERROR:", err.message);
+    res.status(500).json({ message: err.message });
+  }
+},
 
   // ── Create Employer ──────────────────────────────────────────────
   async createUser(req, res) {
     try {
-      const { firstName, lastName, email, businessName, AreaId } = req.body;
-      const employer = await Employer.create({
-        firstName,
-        lastName,
-        email,
-        businessName,
-        AreaId 
-      });
+      const employer = await Employer.create(req.body);
       res.status(201).json(employer);
     } catch (err) {
-      res.status(500).json({ message: "Could not create record." });
+      res.status(500).json({ message: "Error creating employer" });
     }
   },
 
-  // ── Delete Employer ──────────────────────────────────────────────
   async deleteUser(req, res) {
     try {
-      const { id } = req.params;
-      const employer = await Employer.findByPk(id);
-      if (!employer) return res.status(404).json({ message: "Not found." });
-      await employer.destroy();
-      res.json({ message: "Deleted successfully." });
+      await Employer.destroy({ where: { employerid: req.params.id } });
+      res.json({ message: "Employer removed successfully" });
     } catch (err) {
-      res.status(500).json({ message: "Could not delete." });
+      res.status(500).json({ message: "Error deleting employer" });
     }
   },
 
