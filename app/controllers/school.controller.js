@@ -49,21 +49,11 @@ const normalizeTime = (value) => {
   }
 
   const raw = String(value).trim();
-  const timeMatch = raw.match(/(\d{1,2}):(\d{2})/);
-  if (timeMatch) {
-    return `${String(Number(timeMatch[1])).padStart(2, "0")}:${timeMatch[2]}`;
-  }
-
-  const compactMatch = raw.match(/^(\d{1,2})(\d{2})$/);
-  if (compactMatch) {
-    return `${String(Number(compactMatch[1])).padStart(2, "0")}:${compactMatch[2]}`;
-  }
-
-  const meridiemMatch = raw.match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)$/i);
+  const meridiemMatch = raw.match(/^(\d{1,2})(?:[:.](\d{2}))?\s*(a\.?m\.?|p\.?m\.?|am|pm)$/i);
   if (meridiemMatch) {
     let hour = Number(meridiemMatch[1]);
     const minute = meridiemMatch[2] || "00";
-    const meridiem = meridiemMatch[3].toLowerCase();
+    const meridiem = meridiemMatch[3].toLowerCase().replace(/\./g, "");
     if (meridiem === "pm" && hour !== 12) {
       hour += 12;
     }
@@ -71,6 +61,30 @@ const normalizeTime = (value) => {
       hour = 0;
     }
     return `${String(hour).padStart(2, "0")}:${minute}`;
+  }
+
+  const timeMatch = raw.match(/^(\d{1,2})(?:[:.](\d{2}))/);
+  if (timeMatch) {
+    return `${String(Number(timeMatch[1])).padStart(2, "0")}:${timeMatch[2]}`;
+  }
+
+  const compactMeridiemMatch = raw.match(/^(\d{1,2})(\d{2})\s*(a\.?m\.?|p\.?m\.?|am|pm)$/i);
+  if (compactMeridiemMatch) {
+    let hour = Number(compactMeridiemMatch[1]);
+    const minute = compactMeridiemMatch[2];
+    const meridiem = compactMeridiemMatch[3].toLowerCase().replace(/\./g, "");
+    if (meridiem === "pm" && hour !== 12) {
+      hour += 12;
+    }
+    if (meridiem === "am" && hour === 12) {
+      hour = 0;
+    }
+    return `${String(hour).padStart(2, "0")}:${minute}`;
+  }
+
+  const compactMatch = raw.match(/^(\d{1,2})(\d{2})$/);
+  if (compactMatch) {
+    return `${String(Number(compactMatch[1])).padStart(2, "0")}:${compactMatch[2]}`;
   }
 
   return raw.slice(0, 5);
