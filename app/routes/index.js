@@ -21,6 +21,7 @@ import ShiftRoutes from "./shift.routes.js";
 import TemplateRoutes from "./template.routes.js";
 import TemplateShiftRoutes from "./templateShift.routes.js";
 import TradeRequestShiftRoutes from "./tradeRequestShift.routes.js";
+import SchoolRoutes from "./school.routes.js";
 
 const router = Router();
 
@@ -45,5 +46,6 @@ router.use("/shifts", ShiftRoutes);
 router.use("/templates", TemplateRoutes);
 router.use("/templateShifts", TemplateShiftRoutes);
 router.use("/tradeRequestShifts", TradeRequestShiftRoutes);
+router.use("/school", SchoolRoutes);
 
 export default router;
