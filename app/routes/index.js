@@ -22,6 +22,7 @@ import TemplateRoutes from "./template.routes.js";
 import TemplateShiftRoutes from "./templateShift.routes.js";
 import TradeRequestShiftRoutes from "./tradeRequestShift.routes.js";
 import AdminRoutes from "./admin.routes.js";
+import TimecardRoutes from "./timecard.routes.js";
 
 const router = Router();
 
@@ -47,5 +48,6 @@ router.use("/templates", TemplateRoutes);
 router.use("/templateShifts", TemplateShiftRoutes);
 router.use("/tradeRequestShifts", TradeRequestShiftRoutes);
 router.use("/admin", AdminRoutes);
+router.use("/timecards", TimecardRoutes);
 
 export default router;

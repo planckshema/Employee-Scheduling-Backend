@@ -17,7 +17,7 @@ const ClockOutTime = SequelizeInstance.define("clockOutTime", {
     allowNull: false,
   },
   day: {
-    type: Sequelize.DATE,
+    type: Sequelize.TEXT,
     allowNull: false,
   },
   // refresh_token: {

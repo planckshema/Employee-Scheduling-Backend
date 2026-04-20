@@ -17,7 +17,7 @@ const ClockInTime = SequelizeInstance.define("clockInTime", {
     allowNull: false,
   },
   day: {
-    type: Sequelize.DATE,
+    type: Sequelize.TEXT,
     allowNull: false,
   },
   // refresh_token: {
