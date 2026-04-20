@@ -23,6 +23,7 @@ import TemplateShiftRoutes from "./templateShift.routes.js";
 import TradeRequestShiftRoutes from "./tradeRequestShift.routes.js";
 import AdminRoutes from "./admin.routes.js";
 
+
 const router = Router();
 
 router.use("/", AuthRoutes);
@@ -47,5 +48,6 @@ router.use("/templates", TemplateRoutes);
 router.use("/templateShifts", TemplateShiftRoutes);
 router.use("/tradeRequestShifts", TradeRequestShiftRoutes);
 router.use("/admin", AdminRoutes);
+
 
 export default router;

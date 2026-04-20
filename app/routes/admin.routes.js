@@ -3,7 +3,7 @@ import admin from "../controllers/admin.controller.js";
 import jwt from "jsonwebtoken";
 import authConfig from "../config/auth.config.js";
 
-var router = Router();
+const router = Router(); // Use const instead of var
 
 // ── Middleware: verify JWT and check isAdmin ──────────────────────
 function requireAdmin(req, res, next) {
@@ -21,7 +21,6 @@ function requireAdmin(req, res, next) {
   }
 }
 
-// ── Routes ────────────────────────────────────────────────────────
 router.post("/login",          admin.login);
 router.get("/stats",           requireAdmin, admin.getStats);
 router.get("/users",           requireAdmin, admin.getUsers);
@@ -29,4 +28,4 @@ router.post("/users",          requireAdmin, admin.createUser);
 router.put("/users/:id",       requireAdmin, admin.updateUser);
 router.delete("/users/:id",    requireAdmin, admin.deleteUser);
 
-export default router;
+export default router; // Ensure this is the only export
