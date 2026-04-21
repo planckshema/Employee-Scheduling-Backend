@@ -62,25 +62,30 @@ db.admin = Admin;
 db.user.belongsTo(db.employee, { foreignKey: 'EmployeeID' });
 db.employee.hasOne(db.user, { foreignKey: 'EmployeeID' });
 
-// 2. Employer & BusinessArea (One-to-Many)
+// 3. Employer & Employee 
+// add the alias 'staff' to match the admin.controller.js logic.
+db.employer.hasMany(db.employee, { as: 'staff', foreignKey: 'employerID' });
+db.employee.belongsTo(db.employer, { foreignKey: 'employerID' });
+
+// 4. Employer & BusinessArea (One-to-Many)
 db.employer.hasMany(db.businessArea, { foreignKey: 'EmployerID' });
 db.businessArea.belongsTo(db.employer, { foreignKey: 'EmployerID' });
 
-// 3. BusinessArea & Positions (One-to-Many)
+// 5. BusinessArea & Positions (One-to-Many)
 db.businessArea.hasMany(db.position, { foreignKey: 'AreaID' });
 db.position.belongsTo(db.businessArea, { foreignKey: 'AreaID' });
 
-// 4. BusinessArea & Schedule (One-to-Many)
+// 6. BusinessArea & Schedule (One-to-Many)
 db.businessArea.hasMany(db.schedule, { foreignKey: 'AreaID' });
 db.schedule.belongsTo(db.businessArea, { foreignKey: 'AreaID' });
 
-// 5. Employee & EmployeePosition (Many-to-Many via EmployeePosition)
+// 7. Employee & EmployeePosition (Many-to-Many via EmployeePosition)
 db.employee.hasMany(db.employeePosition, { foreignKey: 'EmployeeID' });
 db.employeePosition.belongsTo(db.employee, { foreignKey: 'EmployeeID' });
 db.position.hasMany(db.employeePosition, { foreignKey: 'PositionID' });
 db.employeePosition.belongsTo(db.position, { foreignKey: 'PositionID' });
 
-// 6. Shift Relationships
+// 8. Shift Relationships
 // Shift belongs to Employee, Schedule, and TaskList
 db.employee.hasMany(db.shift, { foreignKey: 'EmployeeID' });
 db.shift.belongsTo(db.employee, { foreignKey: 'EmployeeID' });
@@ -91,32 +96,32 @@ db.shift.belongsTo(db.schedule, { foreignKey: 'ScheduleID' });
 db.taskList.hasMany(db.shift, { foreignKey: 'TaskListID' });
 db.shift.belongsTo(db.taskList, { foreignKey: 'TaskListID' });
 
-// 7. Clock In/Out & Shift
+// 9. Clock In/Out & Shift
 db.shift.hasMany(db.clockInTime, { foreignKey: 'ShiftID' });
 db.clockInTime.belongsTo(db.shift, { foreignKey: 'ShiftID' });
 
 db.shift.hasMany(db.clockOutTime, { foreignKey: 'ShiftID' });
 db.clockOutTime.belongsTo(db.shift, { foreignKey: 'ShiftID' });
 
-// 8. TimeOff & Availability
+// 10. TimeOff & Availability
 db.employee.hasMany(db.timeOff, { foreignKey: 'EmployeeID' });
 db.timeOff.belongsTo(db.employee, { foreignKey: 'EmployeeID' });
 
 db.employee.hasMany(db.employeeAvailability, { foreignKey: 'EmployeeID' });
 db.employeeAvailability.belongsTo(db.employee, { foreignKey: 'EmployeeID' });
 
-// 9. TaskList & TaskListItems
+// 11. TaskList & TaskListItems
 db.taskList.hasMany(db.taskListItem, { foreignKey: 'TaskListID' });
 db.taskListItem.belongsTo(db.taskList, { foreignKey: 'TaskListID' });
 
-// 10. Task Status Tracking
+// 12. Task Status Tracking
 db.shift.hasMany(db.taskStatus, { foreignKey: 'ShiftID' });
 db.taskStatus.belongsTo(db.shift, { foreignKey: 'ShiftID' });
 
 db.taskListItem.hasMany(db.taskStatus, { foreignKey: 'TaskListItemID' });
 db.taskStatus.belongsTo(db.taskListItem, { foreignKey: 'TaskListItemID' });
 
-// 11. Shift Swap Requests
+// 1. Shift Swap Requests
 db.shift.hasMany(db.shiftSwapRequest, { foreignKey: 'ShiftID' });
 db.shiftSwapRequest.belongsTo(db.shift, { foreignKey: 'ShiftID' });
 
@@ -154,5 +159,6 @@ db.employee.hasMany(db.tradeRequestShift, {
     foreignKey: 'RequesterID',
     as: 'ClaimedTrades'
 });
+
 
 export default db;
