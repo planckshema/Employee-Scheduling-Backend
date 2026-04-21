@@ -211,6 +211,16 @@ const formatAvailabilitySummary = (row) =>
     ? `${row.startTime} - ${row.endTime}`
     : "Unavailable";
 
+const resolveClockDay = (shift, fallbackDate = new Date()) => {
+  const shiftDate = parseLocalDate(shift?.startDate);
+  if (shiftDate) {
+    return shiftDate;
+  }
+
+  const fallback = parseLocalDate(fallbackDate);
+  return fallback || new Date();
+};
+
 const toMillis = (value) => {
   if (!value) {
     return 0;
@@ -769,10 +779,7 @@ exports.clockIn = async (req, res) => {
       ShiftID: shiftId,
       dateTime: now,
       startTime: now,
-      day: JSON.stringify({
-        label: "Clock In",
-        dayKey: dayConfigs[now.getDay() === 0 ? 6 : now.getDay() - 1]?.dayKey || "",
-      }),
+      day: resolveClockDay(shift, now),
     });
 
     return res.status(201).send(record);
@@ -831,10 +838,7 @@ exports.clockOut = async (req, res) => {
       ShiftID: shiftId,
       dateTime: now,
       endTime: now,
-      day: JSON.stringify({
-        label: "Clock Out",
-        dayKey: dayConfigs[now.getDay() === 0 ? 6 : now.getDay() - 1]?.dayKey || "",
-      }),
+      day: resolveClockDay(shift, now),
     });
 
     return res.status(201).send(record);
