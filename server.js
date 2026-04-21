@@ -7,8 +7,6 @@ import morgan from "morgan";
 import db from "./app/models/index.js";
 import logger from "./app/config/logger.js";
 
-db.sequelize.sync({ alter: true });
-
 const app = express();
 
 // HTTP request logger middleware
@@ -58,11 +56,41 @@ app.use("/workerscheduling-t8", routes);
 const rawPort = String(process.env.PORT || "3100").trim().replace(/;$/, "");
 const PORT = Number.parseInt(rawPort, 10) || 3100;
 
-if (process.env.NODE_ENV !== "test") {
-  app.listen(PORT, () => {
-    logger.info(`Server is running on port ${PORT}`);
-  });
-}
+const shouldAlterSchema = String(process.env.DB_SYNC_ALTER || "").toLowerCase() === "true";
+
+const startServer = async () => {
+  try {
+    await db.sequelize.authenticate();
+    logger.info("Database connection established");
+
+    if (shouldAlterSchema) {
+      logger.warn("Running Sequelize sync with alter=true");
+      await db.sequelize.sync({ alter: true });
+    } else {
+      await db.sequelize.sync();
+    }
+
+    if (process.env.NODE_ENV !== "test") {
+      app.listen(PORT, () => {
+        logger.info(`Server is running on port ${PORT}`);
+      });
+    }
+  } catch (error) {
+    logger.error(`Backend startup failed: ${error.stack || error.message}`);
+    process.exit(1);
+  }
+};
+
+process.on("unhandledRejection", (reason) => {
+  logger.error(`Unhandled rejection: ${reason?.stack || reason}`);
+});
+
+process.on("uncaughtException", (error) => {
+  logger.error(`Uncaught exception: ${error.stack || error.message}`);
+  process.exit(1);
+});
+
+startServer();
 
 app.delete('/admin/staff/:id', (req, res) => {
     const staffId = req.params.id;
