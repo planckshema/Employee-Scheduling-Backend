@@ -129,16 +129,25 @@ exports.getAvailableShiftsForBoard = async (req, res) => {
     }
 };
 
-exports.getPendingCount = (req, res) => {
-    TradeRequestShift.count({
-        where: { status: 'Pending' }
-    })
-        .then(count => {
-            res.send({ pendingCount: count });
-        })
-        .catch(err => {
-            res.status(500).send({ message: "Error counting pending trades." });
+exports.getPendingCount = async (req, res) => {
+    try {
+        const [pendingCount, availableCount] = await Promise.all([
+            TradeRequestShift.count({
+                where: { status: 'Pending' }
+            }),
+            TradeRequestShift.count({
+                where: { status: 'Available' }
+            })
+        ]);
+
+        res.send({
+            pendingCount,
+            availableCount,
+            attentionCount: pendingCount + availableCount
         });
+    } catch (err) {
+        res.status(500).send({ message: "Error counting trade board items." });
+    }
 };
 
 // Reset trade request to 'Available' and clear the requester
