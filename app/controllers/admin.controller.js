@@ -52,26 +52,25 @@ export default {
   },
 
   // ── Get All Users (The Hierarchy) ────────────────────────────────
-async getUsers(req, res) {
-  try {
-    // We use the model names defined in your db object
-    const data = await db.employer.findAll({
-      attributes: ["employerid", "businessName", "firstName", "lastName", "email"],
-      include: [
-        {
-          model: db.employee,
-          as: "staff", // This MUST match the 'as' in models/index.js
-          attributes: ["EmployeeID", "firstName", "lastName", "email"]
-        }
-      ]
-    });
-    res.json(data);
-  } catch (err) {
-    // print the EXACT error to console
-    console.error("DATABASE ERROR:", err.message);
-    res.status(500).json({ message: err.message });
-  }
-},
+  async getUsers(req, res) {
+    try {
+      // Modified to ensure the associated employees are actually returned
+      const data = await Employer.findAll({
+        include: [
+          {
+            model: Employee,
+            // We use "staff" because your original code used it, 
+            // but we allow Sequelize to return all columns so fName/lName aren't lost
+            as: "staff", 
+          }
+        ]
+      });
+      res.json(data);
+    } catch (err) {
+      console.error("DATABASE ERROR:", err.message);
+      res.status(500).json({ message: err.message });
+    }
+  },
 
   // ── Create Employer ──────────────────────────────────────────────
   async createUser(req, res) {
@@ -83,6 +82,7 @@ async getUsers(req, res) {
     }
   },
 
+  // ── Delete Employer ──────────────────────────────────────────────
   async deleteUser(req, res) {
     try {
       await Employer.destroy({ where: { employerid: req.params.id } });
@@ -92,18 +92,30 @@ async getUsers(req, res) {
     }
   },
 
+  // ── Update Employer ──────────────────────────────────────────────
   async updateUser(req, res) {
     try {
       const { id } = req.params;
-      const { firstName, lastName, email, businessName } = req.body;
+      const { firstName, lastName, email, businessName, location } = req.body;
       const employer = await Employer.findByPk(id);
       
       if (!employer) return res.status(404).json({ message: "Not found" });
 
-      await employer.update({ firstName, lastName, email, businessName });
+      await employer.update({ firstName, lastName, email, businessName, location });
       res.json({ message: "Updated successfully" });
     } catch (err) {
       res.status(500).json({ message: "Update failed" });
     }
   },
+
+  // ── Delete Employee (Staff) ──────────────────────────────────────
+  async deleteEmployee(req, res) {
+    try {
+      const { id } = req.params;
+      await Employee.destroy({ where: { EmployeeID: id } });
+      res.json({ message: "Staff member removed successfully" });
+    } catch (err) {
+      res.status(500).json({ message: "Error deleting staff member" });
+    }
+  }
 };
