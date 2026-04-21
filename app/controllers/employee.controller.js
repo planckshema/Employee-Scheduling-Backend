@@ -182,6 +182,30 @@ const normalizeAvailability = (availabilityText) => {
   });
 };
 
+const normalizeUnavailableBlocks = (availabilityText) => {
+  if (!availabilityText) {
+    return [];
+  }
+
+  try {
+    const parsed = typeof availabilityText === "string" ? JSON.parse(availabilityText) : availabilityText;
+    const blocks = Array.isArray(parsed?.unavailableBlocks) ? parsed.unavailableBlocks : [];
+
+    return blocks
+      .filter((block) => block?.dayKey && block?.startTime && block?.endTime)
+      .map((block, index) => ({
+        id: block.id || `unavailable-${index + 1}`,
+        dayKey: String(block.dayKey).toLowerCase(),
+        label: block.label || dayConfigs.find((day) => day.dayKey === String(block.dayKey).toLowerCase())?.label || "",
+        startTime: String(block.startTime).slice(0, 5),
+        endTime: String(block.endTime).slice(0, 5),
+        reason: block.reason || "Unavailable",
+      }));
+  } catch (err) {
+    return [];
+  }
+};
+
 const formatAvailabilitySummary = (row) =>
   row.available && row.startTime && row.endTime
     ? `${row.startTime} - ${row.endTime}`
@@ -387,6 +411,7 @@ exports.getAvailabilityIndex = async (_req, res) => {
         ...entry,
         summary: formatAvailabilitySummary(entry),
       })),
+      unavailableBlocks: normalizeUnavailableBlocks(row.availabilityText),
     }));
 
     return res.send(availability);
@@ -492,6 +517,7 @@ exports.getDashboard = async (req, res) => {
     ]);
 
     const availability = normalizeAvailability(availabilityRecord?.availabilityText);
+    const unavailableBlocks = normalizeUnavailableBlocks(availabilityRecord?.availabilityText);
     const mappedShifts = shifts.map(mapShiftForDashboard);
     const now = new Date();
     const weekStart = getStartOfWeek(now);
@@ -566,6 +592,7 @@ exports.getDashboard = async (req, res) => {
         ...row,
         summary: formatAvailabilitySummary(row),
       })),
+      unavailableBlocks,
       timeOffHistory,
     });
   } catch (err) {
@@ -592,18 +619,21 @@ exports.updateAvailability = async (req, res) => {
     const availability = normalizeAvailability(
       req.body.weeklyAvailability || req.body.availability || req.body,
     );
+    const unavailableBlocks = normalizeUnavailableBlocks({
+      unavailableBlocks: req.body.unavailableBlocks || [],
+    });
 
     const existing = await EmployeeAvailability.findOne({
       where: { EmployeeID: employee.EmployeeID },
     });
 
     if (existing) {
-      existing.availabilityText = JSON.stringify(availability);
+      existing.availabilityText = JSON.stringify({ weeklyAvailability: availability, unavailableBlocks });
       await existing.save();
     } else {
       await EmployeeAvailability.create({
         EmployeeID: employee.EmployeeID,
-        availabilityText: JSON.stringify(availability),
+        availabilityText: JSON.stringify({ weeklyAvailability: availability, unavailableBlocks }),
       });
     }
 
@@ -613,6 +643,7 @@ exports.updateAvailability = async (req, res) => {
         ...row,
         summary: formatAvailabilitySummary(row),
       })),
+      unavailableBlocks,
     });
   } catch (err) {
     logger.error(`Error updating employee availability for user ${userId}: ${err.message}`);

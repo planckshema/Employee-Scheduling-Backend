@@ -11,6 +11,20 @@ exports.create = async (req, res) => {
     return res.status(400).send({ message: "Template name cannot be empty!" });
   }
 
+  const trimmedDescription = String(req.body.description || "").trim();
+  const trimmedName = String(req.body.name || "").trim();
+  const existingTemplate = await Template.findOne({
+    where: trimmedDescription
+      ? { description: trimmedDescription }
+      : { name: trimmedName },
+  });
+
+  if (existingTemplate) {
+    return res.status(409).send({
+      message: `This week is already saved as "${existingTemplate.name}". Delete that template first if you want to save it again.`,
+    });
+  }
+
   // Use a transaction to ensure both Template and Shifts save together
   const transaction = await db.sequelize.transaction();
 
