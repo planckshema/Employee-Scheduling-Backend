@@ -121,19 +121,28 @@ const parseDayMeta = (value) => {
   };
 };
 
-const buildDayMeta = ({ dateValue, employeeName, position, taskListId }) => ({
+const normalizeEmployeeId = (value) => {
+  if (value === null || value === undefined || value === "") {
+    return null;
+  }
+
+  const parsed = Number(value);
+  return Number.isNaN(parsed) ? null : parsed;
+};
+
+const buildDayMeta = ({ dateValue, employeeName, position, taskListId, EmployeeID }) => ({
   label: weekdayLabels[dateValue.getDay()],
   dayKey: weekdayKeys[dateValue.getDay()],
-  employeeName: employeeName || "",
+  employeeName: EmployeeID ? employeeName || "" : "",
   position: position || "",
   taskListId: taskListId || null,
 });
 
 const toApi = (row) => {
   const meta = parseDayMeta(row.day);
-  const employeeName =
-    meta.employeeName ||
-    [row.employee?.firstName, row.employee?.lastName].filter(Boolean).join(" ").trim();
+  const employeeName = row.EmployeeID
+    ? [row.employee?.firstName, row.employee?.lastName].filter(Boolean).join(" ").trim() || meta.employeeName || ""
+    : "";
 
   return {
     shiftId: row.shiftId,
@@ -161,7 +170,7 @@ const extractShiftPayload = (body) => {
     body.employeeName ||
     [body.firstName, body.lastName].filter(Boolean).join(" ").trim() ||
     [body.fName, body.lName].filter(Boolean).join(" ").trim();
-  const EmployeeID = body.EmployeeID ?? body.employeeId ?? null;
+  const EmployeeID = normalizeEmployeeId(body.EmployeeID ?? body.employeeId ?? null);
   const taskListId = body.taskListId ?? body.TaskListID ?? null;
   const position = body.position || "Staff";
 

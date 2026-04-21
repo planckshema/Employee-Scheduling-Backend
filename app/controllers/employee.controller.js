@@ -187,6 +187,18 @@ const formatAvailabilitySummary = (row) =>
     ? `${row.startTime} - ${row.endTime}`
     : "Unavailable";
 
+const toMillis = (value) => {
+  if (!value) {
+    return 0;
+  }
+
+  const parsed = new Date(value).getTime();
+  return Number.isNaN(parsed) ? 0 : parsed;
+};
+
+const hasOpenClockIn = (clockInRow, clockOutRow) =>
+  Boolean(clockInRow) && (!clockOutRow || toMillis(clockInRow.dateTime) > toMillis(clockOutRow.dateTime));
+
 const mapShiftForDashboard = (row) => {
   const meta = parseShiftMeta(row.day);
   const dateValue = parseLocalDate(row.startDate);
@@ -706,12 +718,18 @@ exports.clockIn = async (req, res) => {
       return res.status(403).send({ message: "This shift does not belong to the current employee." });
     }
 
-    const existingClockIn = await ClockInTime.findOne({
-      where: { ShiftID: shiftId },
-      order: [["clockInId", "DESC"]],
-    });
+    const [latestClockIn, latestClockOut] = await Promise.all([
+      ClockInTime.findOne({
+        where: { ShiftID: shiftId },
+        order: [["clockInId", "DESC"]],
+      }),
+      ClockOutTime.findOne({
+        where: { ShiftID: shiftId },
+        order: [["clockOutId", "DESC"]],
+      }),
+    ]);
 
-    if (existingClockIn) {
+    if (hasOpenClockIn(latestClockIn, latestClockOut)) {
       return res.status(400).send({ message: "You have already clocked in for this shift." });
     }
 
@@ -758,29 +776,30 @@ exports.clockOut = async (req, res) => {
       return res.status(403).send({ message: "This shift does not belong to the current employee." });
     }
 
-    const existingClockIn = await ClockInTime.findOne({
-      where: { ShiftID: shiftId },
-      order: [["clockInId", "DESC"]],
-    });
+    const [latestClockIn, latestClockOut] = await Promise.all([
+      ClockInTime.findOne({
+        where: { ShiftID: shiftId },
+        order: [["clockInId", "DESC"]],
+      }),
+      ClockOutTime.findOne({
+        where: { ShiftID: shiftId },
+        order: [["clockOutId", "DESC"]],
+      }),
+    ]);
 
-    if (!existingClockIn) {
+    if (!latestClockIn) {
       return res.status(400).send({ message: "You must clock in before clocking out." });
     }
 
-    const existingClockOut = await ClockOutTime.findOne({
-      where: { ShiftID: shiftId },
-      order: [["clockOutId", "DESC"]],
-    });
-
-    if (existingClockOut) {
-      return res.status(400).send({ message: "You have already clocked out for this shift." });
+    if (!hasOpenClockIn(latestClockIn, latestClockOut)) {
+      return res.status(400).send({ message: "You are not currently clocked in." });
     }
 
     const now = new Date();
     const record = await ClockOutTime.create({
       ShiftID: shiftId,
       dateTime: now,
-      startTime: now,
+      endTime: now,
       day: JSON.stringify({
         label: "Clock Out",
         dayKey: dayConfigs[now.getDay() === 0 ? 6 : now.getDay() - 1]?.dayKey || "",
