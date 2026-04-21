@@ -146,4 +146,63 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
+exports.findAll = (req, res) => {
+  Employer.findAll({
+    include: [{
+      model: db.employee, // Try changing 'staff' to 'employee'
+      as: "staff"
+    }]
+  })
+  .then(data => {
+    res.send(data);
+  })
+  .catch(err => {
+    res.status(500).send({ message: "Error retrieving employers" });
+  });
+};
+
+// Add this to your existing employer.controller.js
+
+exports.addEmployee = async (req, res) => {
+  // 1. Get the userId from the request (sent from Employer Dashboard)
+  const userId = req.params.userId || req.params.id;
+
+  try {
+    // 2. Find the Employer record that belongs to this logged-in User
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).send({ message: "User not found." });
+    }
+
+    const employer = await findEmployerForUser(user);
+    if (!employer) {
+      return res.status(404).send({ 
+        message: "You must complete your Employer profile before adding employees." 
+      });
+    }
+
+    // 3. Create the Employee payload and FORCE the employerid link
+    const employeePayload = {
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+      email: req.body.email,
+      phoneNum: req.body.phoneNum,
+      // This is the magic link that fixes the NULL issue in your screenshot
+      employerID: employer.employerid
+    };
+
+    // 4. Save to the database
+    const newEmployee = await db.employee.create(employeePayload);
+    
+    logger.info(`Employee ${newEmployee.EmployeeID} auto-assigned to Employer ${employer.employerid}`);
+    
+    return res.status(201).send(newEmployee);
+  } catch (err) {
+    logger.error(`Error auto-assigning employee: ${err.message}`);
+    return res.status(500).send({
+      message: err.message || "Error occurred while adding the employee."
+    });
+  }
+};
+
 export default exports;

@@ -15,5 +15,9 @@ router.get("/merged-availability/:userId", school.getMergedAvailability);
 router.get("/:id", employee.findOne);
 router.put("/:id", employee.update);
 router.delete("/:id", employee.delete);
+router.get("/dashboard/users/:userId/today-shift", employee.getTodayShift);
+router.get("/dashboard/users/:userId/timeclock/:shiftId", employee.getTimeClockStatus);
+router.post("/dashboard/users/:userId/timeclock/:shiftId/clock-in", employee.clockIn);
+router.post("/dashboard/users/:userId/timeclock/:shiftId/clock-out", employee.clockOut);
 
 export default router;

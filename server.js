@@ -64,6 +64,23 @@ if (process.env.NODE_ENV !== "test") {
   });
 }
 
+app.delete('/admin/staff/:id', (req, res) => {
+    const staffId = req.params.id;
+    
+    // Check your DB column name! Is it EmployeeID or id?
+    const sql = "DELETE FROM staff WHERE EmployeeID = ?"; 
+    
+    db.query(sql, [staffId], (err, result) => {
+        if (err) {
+            console.error("DB Error:", err);
+            return res.status(500).json({ message: "Database error" });
+        }
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: "Staff not found" });
+        }
+        res.status(200).json({ message: "Staff deleted successfully" });
+    });
+});
 // Export logger for use in other modules
 export { logger };
 
