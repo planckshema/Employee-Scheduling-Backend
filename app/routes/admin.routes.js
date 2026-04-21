@@ -3,9 +3,8 @@ import admin from "../controllers/admin.controller.js";
 import jwt from "jsonwebtoken";
 import authConfig from "../config/auth.config.js";
 
-const router = Router(); // Use const instead of var
+const router = Router();
 
-// ── Middleware: verify JWT and check isAdmin ──────────────────────
 function requireAdmin(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader) return res.status(401).json({ message: "No token provided." });
@@ -27,5 +26,6 @@ router.get("/users",           requireAdmin, admin.getUsers);
 router.post("/users",          requireAdmin, admin.createUser);
 router.put("/users/:id",       requireAdmin, admin.updateUser);
 router.delete("/users/:id",    requireAdmin, admin.deleteUser);
+router.delete("/staff/:id",    requireAdmin, admin.deleteEmployee); // ← this was missing
 
-export default router; // Ensure this is the only export
+export default router;

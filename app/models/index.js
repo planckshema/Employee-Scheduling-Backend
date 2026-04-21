@@ -64,8 +64,8 @@ db.employee.hasOne(db.user, { foreignKey: 'EmployeeID' });
 
 // 3. Employer & Employee 
 // add the alias 'staff' to match the admin.controller.js logic.
-db.employer.hasMany(db.employee, { as: 'staff', foreignKey: 'employerid' });
-db.employee.belongsTo(db.employer, { foreignKey: 'employerid' });
+db.employer.hasMany(db.employee, { as: 'staff', foreignKey: 'employerID' });
+db.employee.belongsTo(db.employer, { foreignKey: 'employerID' });
 
 // 4. Employer & BusinessArea (One-to-Many)
 db.employer.hasMany(db.businessArea, { foreignKey: 'EmployerID' });
