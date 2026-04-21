@@ -8,6 +8,8 @@ const TimeOff = db.timeOff;
 const EmployeeAvailability = db.employeeAvailability;
 const Op = db.Sequelize.Op;
 const exports = {};
+const ClockInTime = db.clockInTime;
+const ClockOutTime = db.clockOutTime;
 
 const dayConfigs = [
   { dayKey: "mon", label: "Monday", index: 1 },
@@ -647,6 +649,180 @@ exports.updateAvailability = async (req, res) => {
     logger.error(`Error updating employee availability for user ${userId}: ${err.message}`);
     return res.status(500).send({
       message: err.message || "Some error occurred while saving availability.",
+    });
+  }
+};
+
+exports.getTodayShift = async (req, res) => {
+  const userId = req.params.userId || req.params.id;
+
+  try {
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).send({ message: `Cannot find User with id=${userId}.` });
+    }
+
+    const employee = await resolveEmployeeForUser(user);
+    if (!employee) {
+      return res.status(404).send({ message: "Employee profile not found." });
+    }
+
+    const today = new Date();
+    const todayString = today.toISOString().slice(0, 10);
+
+    const shifts = await Shift.findAll({
+      where: { EmployeeID: employee.EmployeeID },
+      order: [["startDate", "ASC"], ["startTime", "ASC"]],
+    });
+
+    const mappedShifts = shifts.map(mapShiftForDashboard);
+    const todaysShift = mappedShifts.find((shift) => shift.date === todayString) || null;
+
+    return res.send(todaysShift);
+  } catch (err) {
+    logger.error(`Error retrieving today's shift for user ${userId}: ${err.message}`);
+    return res.status(500).send({
+      message: err.message || "Some error occurred while retrieving today's shift.",
+    });
+  }
+};
+
+exports.getTimeClockStatus = async (req, res) => {
+  const { shiftId } = req.params;
+
+  try {
+    const [clockInRow, clockOutRow] = await Promise.all([
+      ClockInTime.findOne({
+        where: { ShiftID: shiftId },
+        order: [["clockInId", "DESC"]],
+      }),
+      ClockOutTime.findOne({
+        where: { ShiftID: shiftId },
+        order: [["clockOutId", "DESC"]],
+      }),
+    ]);
+
+    return res.send({
+      clockInTime: clockInRow?.dateTime || null,
+      clockOutTime: clockOutRow?.dateTime || null,
+    });
+  } catch (err) {
+    logger.error(`Error retrieving time clock status for shift ${shiftId}: ${err.message}`);
+    return res.status(500).send({
+      message: err.message || "Some error occurred while retrieving time clock status.",
+    });
+  }
+};
+
+exports.clockIn = async (req, res) => {
+  const { userId, shiftId } = req.params;
+
+  try {
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).send({ message: `Cannot find User with id=${userId}.` });
+    }
+
+    const employee = await resolveEmployeeForUser(user);
+    if (!employee) {
+      return res.status(404).send({ message: "Employee profile not found." });
+    }
+
+    const shift = await Shift.findByPk(shiftId);
+    if (!shift) {
+      return res.status(404).send({ message: `Cannot find Shift with id=${shiftId}.` });
+    }
+
+    if (shift.EmployeeID !== employee.EmployeeID) {
+      return res.status(403).send({ message: "This shift does not belong to the current employee." });
+    }
+
+    const existingClockIn = await ClockInTime.findOne({
+      where: { ShiftID: shiftId },
+      order: [["clockInId", "DESC"]],
+    });
+
+    if (existingClockIn) {
+      return res.status(400).send({ message: "You have already clocked in for this shift." });
+    }
+
+    const now = new Date();
+    const record = await ClockInTime.create({
+      ShiftID: shiftId,
+      dateTime: now,
+      startTime: now,
+      day: JSON.stringify({
+        label: "Clock In",
+        dayKey: dayConfigs[now.getDay() === 0 ? 6 : now.getDay() - 1]?.dayKey || "",
+      }),
+    });
+
+    return res.status(201).send(record);
+  } catch (err) {
+    logger.error(`Error clocking in for shift ${shiftId}: ${err.message}`);
+    return res.status(500).send({
+      message: err.message || "Some error occurred while clocking in.",
+    });
+  }
+};
+
+exports.clockOut = async (req, res) => {
+  const { userId, shiftId } = req.params;
+
+  try {
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).send({ message: `Cannot find User with id=${userId}.` });
+    }
+
+    const employee = await resolveEmployeeForUser(user);
+    if (!employee) {
+      return res.status(404).send({ message: "Employee profile not found." });
+    }
+
+    const shift = await Shift.findByPk(shiftId);
+    if (!shift) {
+      return res.status(404).send({ message: `Cannot find Shift with id=${shiftId}.` });
+    }
+
+    if (shift.EmployeeID !== employee.EmployeeID) {
+      return res.status(403).send({ message: "This shift does not belong to the current employee." });
+    }
+
+    const existingClockIn = await ClockInTime.findOne({
+      where: { ShiftID: shiftId },
+      order: [["clockInId", "DESC"]],
+    });
+
+    if (!existingClockIn) {
+      return res.status(400).send({ message: "You must clock in before clocking out." });
+    }
+
+    const existingClockOut = await ClockOutTime.findOne({
+      where: { ShiftID: shiftId },
+      order: [["clockOutId", "DESC"]],
+    });
+
+    if (existingClockOut) {
+      return res.status(400).send({ message: "You have already clocked out for this shift." });
+    }
+
+    const now = new Date();
+    const record = await ClockOutTime.create({
+      ShiftID: shiftId,
+      dateTime: now,
+      startTime: now,
+      day: JSON.stringify({
+        label: "Clock Out",
+        dayKey: dayConfigs[now.getDay() === 0 ? 6 : now.getDay() - 1]?.dayKey || "",
+      }),
+    });
+
+    return res.status(201).send(record);
+  } catch (err) {
+    logger.error(`Error clocking out for shift ${shiftId}: ${err.message}`);
+    return res.status(500).send({
+      message: err.message || "Some error occurred while clocking out.",
     });
   }
 };
